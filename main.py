@@ -1,7 +1,6 @@
 import argparse
 import sys
 import traceback
-from traceback import format_exc
 
 import exceptions
 import settings
@@ -10,7 +9,8 @@ from utils import check_settings, send_email
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='script for parse MNP files and load DB to server')
+    parser = argparse.ArgumentParser(
+        description='script for parse MNP files and load DB to server')
     parser.add_argument(
         '--country',
         help='country for load',
@@ -23,7 +23,7 @@ def parse_args():
 def main():
     try:
         check_settings()
-    except exceptions.CheckConfigError as err:
+    except exceptions.CheckConfigError:
         tb = traceback.format_exc()
         send_email(text=tb, subject='mnp parser error')
         sys.exit()

@@ -1,0 +1,9 @@
+[flake8]
+ignore = D203
+per-file-ignores = __init__.py:F401
+exclude =
+    .git,
+    __pycache__,
+    settings.py,
+    venv
+max-complexity = 10
