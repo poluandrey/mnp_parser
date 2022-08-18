@@ -1,6 +1,5 @@
 import datetime
 import os
-import shutil
 import smtplib
 from email.message import EmailMessage
 from pathlib import Path
@@ -42,19 +41,19 @@ def send_email(text: str, subject: str) -> None:
     server.send_message(msg)
 
 
-def archive_file(file_in: Path, archive_dir: Path) -> None:
+def archive_file(file_in: Path, archive_dir: Path) -> Path:
     """copy file to archive_dir, gzip it and then delete"""
-    shutil.copy(src=file_in, dst=archive_dir)
+    file = os.path.basename(file_in)
+    file_name, _ = os.path.splitext(file)
+    archive_date = datetime.date.today().strftime('%d%m%Y')
+    archive_file_name = f'{file_name}_{archive_date}.zip'
+    archive_file_path = archive_dir.joinpath(archive_file_name)
+
+    with ZipFile(archive_file_path, 'w') as archive_zip:
+        archive_zip.write(file_in, arcname=file)
     os.remove(file_in)
 
-    file = os.path.basename(file_in)
-    file_name, _ = os.path.split(file)
-    archive_date = datetime.date.today().strftime('%d%m%Y')
-    archive_file_name = f'{file_name}_{archive_date}'
-    archive_file = archive_dir.joinpath(archive_file_name)
-
-    with ZipFile(archive_file, 'w') as archive_zip:
-        archive_zip.write(file_in)
+    return archive_file_path
 
 
 def push_file_to_server(file: Path) -> None:
