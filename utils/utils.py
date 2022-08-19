@@ -13,6 +13,8 @@ LatSettings = namedtuple(
     'Latvia',
     [
         'source_dir',
+        'source_file_name',
+        'source_file_path',
         'handled_file_dir',
         'archive_dir',
         'ftp_dir',
@@ -44,6 +46,8 @@ def get_latvia_settings() -> LatSettings:
     try:
         latvia_settings = LatSettings(
             settings.LAT_SOURCE_DIR,
+            settings.LAT_SOURCE_FILE_NAME,
+            settings.LAT_SOURCE_DIR.joinpath(settings.LAT_SOURCE_FILE_NAME),
             settings.LAT_HANDLED_FILE_DIR,
             settings.LAT_ARCHIVE_DIR,
             settings.LAT_FTP_DIR,
@@ -73,6 +77,19 @@ def get_base_settings() -> BaseSettings:
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return base_settings
+
+
+def create_folder(config_obj) -> None:
+    """if param from settings is directory and not exists then create all folder"""
+    for param in config_obj:
+        if isinstance(param, Path):
+            if param.is_dir() and not param.exists():
+                try:
+                    os.makedirs(param)
+                except FileExistsError:
+                    continue
+                except OSError as err:
+                    raise exceptions.CreateConfigDirError(err) from None
 
 
 def send_email(text: str, subject: str) -> None:
@@ -109,6 +126,6 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
     return archive_file_path
 
 
-def push_file_to_server(file: Path) -> None:
+def push_file_to_server(file_in: Path, remoute_dir: Path) -> None:
     """copy file via ssh"""
     pass
