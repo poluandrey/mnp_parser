@@ -5,7 +5,7 @@ import traceback
 import exceptions
 import settings
 import latvia_mnp
-from utils import send_email, get_latvia_settings, get_base_settings
+from utils import send_email, get_latvia_settings, get_base_settings, create_folder
 
 
 def parse_args():
@@ -25,6 +25,13 @@ def main():
         lat_settings = get_latvia_settings()
         base_settings = get_base_settings()
     except exceptions.ConfigLoadError:
+        tb = traceback.format_exc()
+        send_email(text=tb, subject='mnp parser error')
+        sys.exit()
+    try:
+        create_folder(base_settings)
+        create_folder(lat_settings)
+    except exceptions.CreateConfigDirError:
         tb = traceback.format_exc()
         send_email(text=tb, subject='mnp parser error')
         sys.exit()
