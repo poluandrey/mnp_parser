@@ -11,7 +11,8 @@ def parse_file(file_in: Path) -> Path:
     pass
 
 
-def handle_file(base_settings: utils.BaseSettings, lat_settings: utils.LatSettings):
+def handle_file(base_settings: utils.BaseSettings,
+                lat_settings: utils.LatSettings):
     """
     move source file to tmp dir
     archive source file
@@ -20,8 +21,10 @@ def handle_file(base_settings: utils.BaseSettings, lat_settings: utils.LatSettin
     push file via SSH
     """
     if not lat_settings.source_file_path.exists():
-        raise exceptions.SourceMnpFileNotExists(f'{lat_settings.source_file_path} does not exists')
-    tmp_file = shutil.copy(lat_settings.source_file_path, base_settings.tmp_dir)
+        raise exceptions.SourceMnpFileNotExists(
+            f'{lat_settings.source_file_path} does not exists')
+    tmp_file = shutil.copy(lat_settings.source_file_path,
+                           base_settings.tmp_dir)
     utils.archive_file(file_in=lat_settings.source_file_path,
                        archive_dir=lat_settings.archive_dir)
 

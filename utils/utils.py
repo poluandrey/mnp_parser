@@ -80,7 +80,9 @@ def get_base_settings() -> BaseSettings:
 
 
 def create_folder(config_obj) -> None:
-    """if param from settings is directory and not exists then create all folder"""
+    """
+    if param from settings is directory and not exists then create all folder
+    """
     for param in config_obj:
         if isinstance(param, Path):
             if param.is_dir() and not param.exists():

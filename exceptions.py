@@ -9,7 +9,9 @@ class ConfigLoadError(Error):
 
 
 class CreateConfigDirError(Error):
-    """raise in case of error during creating not existing directory specified in settings"""
+    """
+    raise in case of error during creating not existing
+    directory specified in settings"""
     pass
 
 
