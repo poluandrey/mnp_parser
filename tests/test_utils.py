@@ -1,7 +1,9 @@
 import unittest
+from typing import NamedTuple
+
 import settings
 
-from utils import archive_file
+from utils import archive_file, get_base_settings, get_latvia_settings, LatSettings, BaseSettings
 
 
 class TestArchiveFile(unittest.TestCase):
@@ -16,6 +18,22 @@ class TestArchiveFile(unittest.TestCase):
         
         self.assertTrue(file.exists(), 'archive file does not exist')
         self.assertFalse(test_file.exists(), 'test_file was not delete')
+
+
+class TestGetBaseSettings(unittest.TestCase):
+    def test_get_settings(self):
+        base_settings = get_base_settings()
+
+        self.assertIsInstance(base_settings, BaseSettings)
+
+
+class TestGetLatviaSettings(unittest.TestCase):
+    def test_get_latvia_settings(self):
+        lat_settings = get_latvia_settings()
+
+        self.assertIsInstance(lat_settings, LatSettings)
+
+
 
 
 if __name__ == '__main__':
