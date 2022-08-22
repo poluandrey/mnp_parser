@@ -71,8 +71,8 @@ def handle_file(base_settings: utils.BaseSettings,
     except Exception as err:
         raise exceptions.LatviaParsingError(err) from None
 
-    utils.push_file_to_server(file_in=lat_settings.handled_file_dir,
-                              remoute_dir=lat_settings.remote_dir)
+    utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
+                        remoute_dir=lat_settings.remote_dir)
     os.remove(tmp_file)
 
 

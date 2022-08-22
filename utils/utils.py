@@ -134,6 +134,12 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
     return archive_file_path
 
 
-def push_file_to_server(file_in: Path, remoute_dir: Path) -> None:
+def copy_to_smssw(file_in: Path, remoute_dir: Path) -> None:
     """copy file via ssh"""
     pass
+
+
+def copy_to_ftp_folder():
+    """copy to FTP folder and change user/group ownership"""
+    pass
+
