@@ -18,3 +18,8 @@ class CreateConfigDirError(Error):
 class SourceMnpFileNotExists(Error):
     """raise in case of source mnp file not exists"""
     pass
+
+
+class LatviaParsingError(Error):
+    """raise in case of error during parse Latvia file"""
+    pass

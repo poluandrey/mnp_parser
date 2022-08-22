@@ -16,6 +16,8 @@ LatSettings = namedtuple(
         'source_file_name',
         'source_file_path',
         'handled_file_dir',
+        'handled_file_name',
+        'handled_file_path',
         'archive_dir',
         'ftp_dir',
         'ftp_group_id',
@@ -47,8 +49,12 @@ def get_latvia_settings() -> LatSettings:
         latvia_settings = LatSettings(
             settings.LAT_SOURCE_DIR,
             settings.LAT_SOURCE_FILE_NAME,
-            settings.LAT_SOURCE_DIR.joinpath(settings.LAT_SOURCE_FILE_NAME),
+            settings.LAT_SOURCE_DIR.joinpath(
+                settings.LAT_SOURCE_FILE_NAME),
             settings.LAT_HANDLED_FILE_DIR,
+            settings.LAT_HANDLED_FILE_NAME,
+            settings.LAT_HANDLED_FILE_DIR.joinpath(
+                settings.LAT_HANDLED_FILE_NAME),
             settings.LAT_ARCHIVE_DIR,
             settings.LAT_FTP_DIR,
             settings.LAT_FTP_GROUP_ID,
@@ -117,8 +123,8 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
     """copy file to archive_dir, gzip it and then delete"""
     file = os.path.basename(file_in)
     file_name, _ = os.path.splitext(file)
-    archive_date = datetime.date.today().strftime('%d%m%Y')
-    archive_file_name = f'{file_name}_{archive_date}.zip'
+    archive_date = datetime.date.now().strftime('%d%m%Y_%H%M%S')
+    archive_file_name = f'{file_name}-{archive_date}.zip'
     archive_file_path = archive_dir.joinpath(archive_file_name)
 
     with ZipFile(archive_file_path, 'w') as archive_zip:

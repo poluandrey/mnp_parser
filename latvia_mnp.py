@@ -1,14 +1,54 @@
+import csv
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 import exceptions
 import utils
 
 
-def parse_file(file_in: Path) -> Path:
+def parse_file(file_in: Path,
+               lat_settings: utils.LatSettings):
     """:return file_out: Path"""
-    pass
+    file_out: Path = lat_settings.handled_file_path
+    rn2mcc: dict = {'BC2': '247002', 'BC4': '247005',
+                    'BC1': '247001', 'BC3': '247003', }
+    rn_key = rn2mcc.keys()
+    operator2mcc: dict = {'Tele2': '247002', 'BITE Latvija': '247005',
+                          'Latvijas Mobilais Telefons': '247001',
+                          'Telekom Baltija': '247003'}
+    error_row = []
+    with open(file_in, 'r') as f_in, open(file_out, 'w') as f_out:
+        in_csv = csv.reader(f_in, delimiter=';')
+        out_csv = csv.writer(f_out, delimiter=';')
+
+        for row in in_csv:
+            try:
+                rn: str = row[3].strip()[0:3]
+                if rn in rn_key and rn.startswith('BC'):
+                    mccmnc: str = rn2mcc[rn]
+                    msisdn: str = f'371{row[2].strip()}'
+                    port_date: int = int(
+                        datetime.strptime(row[4],
+                                          ' %Y.%m.%d %H:%M:%S').timestamp())
+                    out_csv.writerow([msisdn, mccmnc, port_date])
+                elif rn.startswith('BC') and rn not in rn_key:
+                    mccmnc: str = operator2mcc[row[1].strip()]
+                    msisdn: str = f'371{row[2].strip()}'
+                    port_date: int = int(datetime.strptime(
+                        row[4],
+                        ' %Y.%m.%d %H:%M:%S').timestamp())
+                    out_csv.writerow([msisdn, mccmnc, port_date])
+            except Exception:
+                error_row.append(row)
+
+        if error_row:
+            message = ''
+            for row in error_row:
+                message: str = '\n'.join(row)
+            utils.send_email(text=message,
+                             subject="Latvia's records which couldn't parse")
 
 
 def handle_file(base_settings: utils.BaseSettings,
@@ -17,7 +57,6 @@ def handle_file(base_settings: utils.BaseSettings,
     move source file to tmp dir
     archive source file
     parse file
-    copy parsed file to local storage
     push file via SSH
     """
     if not lat_settings.source_file_path.exists():
@@ -27,14 +66,14 @@ def handle_file(base_settings: utils.BaseSettings,
                            base_settings.tmp_dir)
     utils.archive_file(file_in=lat_settings.source_file_path,
                        archive_dir=lat_settings.archive_dir)
+    try:
+        parse_file(tmp_file, lat_settings=lat_settings)
+    except Exception as err:
+        raise exceptions.LatviaParsingError(err) from None
 
-    parsed_file = parse_file(tmp_file)
-
-    shutil.copy(parsed_file, lat_settings.handled_file_dir)
-    utils.push_file_to_server(file_in=parsed_file,
+    utils.push_file_to_server(file_in=lat_settings.handled_file_dir,
                               remoute_dir=lat_settings.remote_dir)
     os.remove(tmp_file)
-    return tmp_file
 
 
 if __name__ == '__main__':
