@@ -34,22 +34,27 @@ def parse_file(file_in, bel_settings):
 def handle_file(base_settings: utils.BaseSettings,
                 bel_settings: utils.BelSettings):
 
-    source_file_mask = bel_settings.source_dir.joinpath(bel_settings.source_file_mask)
+    source_file_mask = bel_settings.source_dir.joinpath(
+        bel_settings.source_file_mask)
     source_files = glob(str(source_file_mask))
     if not source_files:
-        raise exceptions.SourceMnpFileNotExists('does not found files matching patterns')
+        raise exceptions.SourceMnpFileNotExists(
+            'does not found files matching patterns')
     elif len(source_files) != 1:
-        raise exceptions.MoreThanOneSourceFilesFound('to many source files found')
+        raise exceptions.MoreThanOneSourceFilesFound(
+            'to many source files found')
     source_file = Path(source_files[0])
 
     tmp_file = shutil.copy(source_file, base_settings.tmp_dir)
     utils.archive_file(source_file, bel_settings.archive_dir)
-    
+
     if bel_settings.handled_file_path.exists():
-        utils.archive_file(bel_settings.handled_file_path.exists, bel_settings.archive_dir)
-        
+        utils.archive_file(bel_settings.handled_file_path,
+                           bel_settings.archive_dir)
+
     parse_file(tmp_file, bel_settings)
 
-    utils.copy_to_smssw(bel_settings.handled_file_path, bel_settings.remote_dir)
+    utils.copy_to_smssw(bel_settings.handled_file_path,
+                        bel_settings.remote_dir)
 
     os.remove(tmp_file)

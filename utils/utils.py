@@ -1,46 +1,14 @@
-from datetime import datetime
 import os
 import smtplib
-from collections import namedtuple
-from typing import NamedTuple, List
+from datetime import datetime
 from email.message import EmailMessage
 from pathlib import Path
+from typing import List, NamedTuple
 from zipfile import ZipFile
 
 import exceptions
 import settings
 
-
-# LatSettings = namedtuple(
-#     'Latvia',
-#     [
-#         'source_dir',
-#         'source_file_name',
-#         'source_file_path',
-#         'handled_file_dir',
-#         'handled_file_name',
-#         'handled_file_path',
-#         'archive_dir',
-#         'ftp_dir',
-#         'ftp_group_id',
-#         'remote_dir'
-#     ]
-# )
-
-# BelSettings = namedtuple(
-#     'Belarus',
-#     [
-#         'source_dir',
-#         'source_file_mask',
-#         'handled_file_dir',
-#         'handled_file_name',
-#         'handled_file_path',
-#         'archive_dir',
-#         'ftp_dir',
-#         'ftp_group_id',
-#         'remote_dir'
-#     ]
-# )
 
 class LatSettings(NamedTuple):
     source_dir: Path
@@ -80,24 +48,6 @@ class BaseSettings(NamedTuple):
     ssh_server: str
     ssh_user: str
     ssh_port: int
-
-# BaseSettings = namedtuple(
-#     'BaseSettings',
-#     [
-#         'tmp_dir',
-#         'archive_dir',
-#         'test_dir',
-#         'log_dir',
-#         'email_server',
-#         'email_port',
-#         'email_login',
-#         'email_password',
-#         'email_recipients',
-#         'ssh_server',
-#         'ssh_user',
-#         'ssh_port'
-#     ]
-# )
 
 
 def get_latvia_settings() -> LatSettings:
@@ -166,7 +116,8 @@ def create_folder(config_obj) -> None:
     """
     for param in config_obj:
         # print(param, type(param))
-        if isinstance(param, Path) and not param.exists() and not os.path.splitext(param)[1]:
+        if isinstance(param, Path) \
+                and not param.exists() and not os.path.splitext(param)[1]:
             try:
                 os.makedirs(param)
             except FileExistsError:
