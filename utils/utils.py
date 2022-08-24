@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import smtplib
 from collections import namedtuple
+from typing import NamedTuple, List
 from email.message import EmailMessage
 from pathlib import Path
 from zipfile import ZipFile
@@ -9,54 +10,94 @@ from zipfile import ZipFile
 import exceptions
 import settings
 
-LatSettings = namedtuple(
-    'Latvia',
-    [
-        'source_dir',
-        'source_file_name',
-        'source_file_path',
-        'handled_file_dir',
-        'handled_file_name',
-        'handled_file_path',
-        'archive_dir',
-        'ftp_dir',
-        'ftp_group_id',
-        'remote_dir'
-    ]
-)
 
-BelSettings = namedtuple(
-    'Belarus',
-    [
-        'source_dir',
-        'source_file_mask',
-        'handled_file_dir',
-        'handled_file_name',
-        'handled_file_path',
-        'archive_dir',
-        'ftp_dir',
-        'ftp_group_id',
-        'remote_dir'
-    ]
-)
+# LatSettings = namedtuple(
+#     'Latvia',
+#     [
+#         'source_dir',
+#         'source_file_name',
+#         'source_file_path',
+#         'handled_file_dir',
+#         'handled_file_name',
+#         'handled_file_path',
+#         'archive_dir',
+#         'ftp_dir',
+#         'ftp_group_id',
+#         'remote_dir'
+#     ]
+# )
 
-BaseSettings = namedtuple(
-    'BaseSettings',
-    [
-        'tmp_dir',
-        'archive_dir',
-        'test_dir',
-        'log_dir',
-        'email_server',
-        'email_port',
-        'email_login',
-        'email_password',
-        'email_recipients',
-        'ssh_server',
-        'ssh_user',
-        'ssh_port'
-    ]
-)
+# BelSettings = namedtuple(
+#     'Belarus',
+#     [
+#         'source_dir',
+#         'source_file_mask',
+#         'handled_file_dir',
+#         'handled_file_name',
+#         'handled_file_path',
+#         'archive_dir',
+#         'ftp_dir',
+#         'ftp_group_id',
+#         'remote_dir'
+#     ]
+# )
+
+class LatSettings(NamedTuple):
+    source_dir: Path
+    source_file_name: str
+    source_file_path: Path
+    handled_file_dir: Path
+    handled_file_name: str
+    handled_file_path: Path
+    archive_dir: Path
+    ftp_dir: Path
+    ftp_group_id: int
+    remote_dir: Path
+
+
+class BelSettings(NamedTuple):
+    source_dir: Path
+    source_file_mask: str
+    handled_file_dir: Path
+    handled_file_name: str
+    handled_file_path: Path
+    archive_dir: Path
+    ftp_dir: Path
+    ftp_group_id: int
+    remote_dir: Path
+
+
+class BaseSettings(NamedTuple):
+    tmp_dir: Path
+    archive_dir: Path
+    test_dir: Path
+    log_dir: Path
+    email_server: str
+    email_port: int
+    email_login: str
+    email_password: str
+    email_recipients: List
+    ssh_server: str
+    ssh_user: str
+    ssh_port: int
+
+# BaseSettings = namedtuple(
+#     'BaseSettings',
+#     [
+#         'tmp_dir',
+#         'archive_dir',
+#         'test_dir',
+#         'log_dir',
+#         'email_server',
+#         'email_port',
+#         'email_login',
+#         'email_password',
+#         'email_recipients',
+#         'ssh_server',
+#         'ssh_user',
+#         'ssh_port'
+#     ]
+# )
 
 
 def get_latvia_settings() -> LatSettings:
