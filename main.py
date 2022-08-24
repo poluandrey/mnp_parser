@@ -1,10 +1,10 @@
 import argparse
 import os
-import sys
 import traceback
 
 import belarus_mnp
 import exceptions
+import kazakhstan_mnp
 import latvia_mnp
 import settings
 import utils
@@ -22,50 +22,55 @@ def parse_args():
     return args
 
 
-def main():
-    base_settings, bel_settings, lat_settings = load_config()
-    create_folders(base_settings)
-    create_folders(lat_settings)
-    create_folders(bel_settings)
-    args = parse_args()
-    if args.country == 'latvia':
-        try:
-            latvia_mnp.handle_file(base_settings, lat_settings)
-        except exceptions.SourceMnpFileNotExists:
-            print(f'{lat_settings.source_file_path} not exists')
-        except Exception:
-            tb = traceback.format_exc()
-            utils.send_email(text=tb, subject='Latvia parser error')
-            tmp_file = base_settings.tmp_dir.joinpath(
-                lat_settings.source_file_name)
-            if tmp_file.exists():
-                os.remove(tmp_file)
-    elif args.country == 'belarus':
-        try:
-            belarus_mnp.handle_file(base_settings, bel_settings)
-        except exceptions.SourceMnpFileNotExists as err:
-            print(err)
-
-
-def create_folders(config):
+def kazakhstan_handler(base_settings):
     try:
-        utils.create_folder(config)
+        kzt_settings = utils.get_kazakhstan_settings()
+        utils.create_folder(kzt_settings)
+    except exceptions.ConfigLoadError:
+        print('error during load latvia settings')
     except exceptions.CreateConfigDirError:
-        tb = traceback.format_exc()
-        utils.send_email(text=tb, subject='mnp parser error')
-        sys.exit()
+        print('error during create KZT folder')
 
 
-def load_config():
+def belarus_handler(base_settings):
+    try:
+        bel_settings = utils.get_belarus_settings()
+        utils.create_folder(bel_settings)
+        belarus_mnp.handle_file(base_settings, bel_settings)
+    except exceptions.SourceMnpFileNotExists as err:
+        print(err)
+    except exceptions.MoreThanOneSourceFilesFound as err:
+        print(err)
+
+
+def latvia_handler(base_settings):
     try:
         lat_settings = utils.get_latvia_settings()
-        base_settings = utils.get_base_settings()
-        bel_settings = utils.get_belarus_settings()
+        utils.create_folder(lat_settings)
+        latvia_mnp.handle_file(base_settings, lat_settings)
     except exceptions.ConfigLoadError:
+        print('error during load latvia settings')
+    except exceptions.SourceMnpFileNotExists:
+        print(f'{lat_settings.source_file_path} not exists')
+    except Exception:
         tb = traceback.format_exc()
-        utils.send_email(text=tb, subject='mnp parser error')
-        sys.exit()
-    return base_settings, bel_settings, lat_settings
+        utils.send_email(text=tb, subject='Latvia parser error')
+        tmp_file = base_settings.tmp_dir.joinpath(
+            lat_settings.source_file_name)
+        if tmp_file.exists():
+            os.remove(tmp_file)
+
+
+def main():
+    base_settings = utils.get_base_settings()
+    utils.create_folder(base_settings)
+    args = parse_args()
+    if args.country == 'latvia':
+        latvia_handler(base_settings)
+    elif args.country == 'belarus':
+        belarus_handler(base_settings)
+    elif args.country == 'kazakhstan':
+        kazakhstan_handler(base_settings)
 
 
 if __name__ == '__main__':

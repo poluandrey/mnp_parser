@@ -10,6 +10,21 @@ import exceptions
 import settings
 
 
+class BaseSettings(NamedTuple):
+    tmp_dir: Path
+    archive_dir: Path
+    test_dir: Path
+    log_dir: Path
+    email_server: str
+    email_port: int
+    email_login: str
+    email_password: str
+    email_recipients: List
+    ssh_server: str
+    ssh_user: str
+    ssh_port: int
+
+
 class LatSettings(NamedTuple):
     source_dir: Path
     source_file_name: str
@@ -18,6 +33,20 @@ class LatSettings(NamedTuple):
     handled_file_name: str
     handled_file_path: Path
     archive_dir: Path
+    ftp_dir: Path
+    ftp_group_id: int
+    remote_dir: Path
+
+
+class KztSettings(NamedTuple):
+    handled_file_dir: Path
+    handled_file_name: str
+    handled_file_path: Path
+    archive_dir: Path
+    ssh_server: str
+    ssh_port: int
+    ssh_login: str
+    ssh_password: str
     ftp_dir: Path
     ftp_group_id: int
     remote_dir: Path
@@ -33,21 +62,6 @@ class BelSettings(NamedTuple):
     ftp_dir: Path
     ftp_group_id: int
     remote_dir: Path
-
-
-class BaseSettings(NamedTuple):
-    tmp_dir: Path
-    archive_dir: Path
-    test_dir: Path
-    log_dir: Path
-    email_server: str
-    email_port: int
-    email_login: str
-    email_password: str
-    email_recipients: List
-    ssh_server: str
-    ssh_user: str
-    ssh_port: int
 
 
 def get_latvia_settings() -> LatSettings:
@@ -68,6 +82,26 @@ def get_latvia_settings() -> LatSettings:
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return latvia_settings
+
+
+def get_kazakhstan_settings() -> KztSettings:
+    try:
+        kazakhstan_settings = KztSettings(
+            settings.KZT_HANDLED_FILE_DIR,
+            settings.KZT_HANDLED_FILE_NAME,
+            settings.KZT_HANDLED_FILE_DIR.joinpath(
+                settings.KZT_HANDLED_FILE_NAME),
+            settings.KZT_ARCHIVE_DIR,
+            settings.KZT_SSH_SERVER,
+            settings.KZT_SSH_PORT,
+            settings.KZT_SSH_USER,
+            settings.KZT_SSH_PASSWD,
+            settings.KZT_FTP_DIR,
+            settings.KZT_FTP_GROUP_ID,
+            settings.KZT_REMOTE_DIR)
+    except AttributeError as err:
+        raise exceptions.ConfigLoadError(err) from None
+    return kazakhstan_settings
 
 
 def get_belarus_settings() -> BelSettings:
