@@ -24,6 +24,20 @@ LatSettings = namedtuple(
         'remote_dir'
     ]
 )
+BelSettings = namedtuple(
+    'Belarus',
+    [
+        'source_dir',
+        'source_file_mask',
+        'handled_file_dir',
+        'handled_file_name',
+        'handled_file_path',
+        'archive_dir',
+        'ftp_dir',
+        'ftp_group_id',
+        'remote_dir'
+    ]
+)
 
 BaseSettings = namedtuple(
     'BaseSettings',
@@ -64,6 +78,25 @@ def get_latvia_settings() -> LatSettings:
     return latvia_settings
 
 
+def get_belarus_settings() -> BelSettings:
+    try:
+        belarus_settings = BelSettings(
+            settings.BEL_SOURCE_DIR,
+            str(settings.BEL_SOURCE_DIR.joinpath(
+                settings.BEL_SOURCE_FILE_MASK)),
+            settings.BEL_HANDLED_FILE_DIR,
+            settings.BEL_HANDLED_FILE_NAME,
+            settings.BEL_HANDLED_FILE_DIR.joinpath(
+                settings.BEL_HANDLED_FILE_NAME),
+            settings.BEL_ARCHIVE_DIR,
+            settings.BEL_FTP_DIR,
+            settings.BEL_FTP_GROUP_ID,
+            settings.BEL_REMOTE_DIR)
+    except AttributeError as err:
+        raise exceptions.ConfigLoadError(err) from None
+    return belarus_settings
+
+
 def get_base_settings() -> BaseSettings:
     try:
         base_settings = BaseSettings(
@@ -90,14 +123,14 @@ def create_folder(config_obj) -> None:
     if param from settings is directory and not exists then try to create it
     """
     for param in config_obj:
-        if isinstance(param, Path):
-            if param.is_dir() and not param.exists():
-                try:
-                    os.makedirs(param)
-                except FileExistsError:
-                    continue
-                except OSError as err:
-                    raise exceptions.CreateConfigDirError(err) from None
+        # print(param, type(param))
+        if isinstance(param, Path) and not param.exists() and not os.path.splitext(param)[1]:
+            try:
+                os.makedirs(param)
+            except FileExistsError:
+                continue
+            except OSError as err:
+                raise exceptions.CreateConfigDirError(err) from None
 
 
 def send_email(text: str, subject: str) -> None:
@@ -142,4 +175,3 @@ def copy_to_smssw(file_in: Path, remoute_dir: Path) -> None:
 def copy_to_ftp_folder():
     """copy to FTP folder and change user/group ownership"""
     pass
-
