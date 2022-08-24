@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import os
 import smtplib
 from collections import namedtuple
@@ -87,7 +87,7 @@ def get_base_settings() -> BaseSettings:
 
 def create_folder(config_obj) -> None:
     """
-    if param from settings is directory and not exists then create all folder
+    if param from settings is directory and not exists then try to create it
     """
     for param in config_obj:
         if isinstance(param, Path):
@@ -123,7 +123,7 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
     """copy file to archive_dir, gzip it and then delete"""
     file = os.path.basename(file_in)
     file_name, _ = os.path.splitext(file)
-    archive_date = datetime.date.now().strftime('%d%m%Y_%H%M%S')
+    archive_date = datetime.now().strftime('%d%m%Y_%H%M%S')
     archive_file_name = f'{file_name}-{archive_date}.zip'
     archive_file_path = archive_dir.joinpath(archive_file_name)
 
@@ -135,7 +135,7 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
 
 
 def copy_to_smssw(file_in: Path, remoute_dir: Path) -> None:
-    """copy file via ssh"""
+    """copy file via ssh to smssw"""
     pass
 
 

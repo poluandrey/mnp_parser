@@ -20,6 +20,6 @@ class SourceMnpFileNotExists(Error):
     pass
 
 
-class LatviaParsingError(Error):
+class LatviaHandlingError(Error):
     """raise in case of error during parse Latvia file"""
     pass

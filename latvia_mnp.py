@@ -56,21 +56,24 @@ def handle_file(base_settings: utils.BaseSettings,
     """
     move source file to tmp dir
     archive source file
+    archive MNP DB
     parse file
     push file via SSH
     """
+
     if not lat_settings.source_file_path.exists():
         raise exceptions.SourceMnpFileNotExists(
             f'{lat_settings.source_file_path} does not exists')
+
     tmp_file = shutil.copy(lat_settings.source_file_path,
                            base_settings.tmp_dir)
     utils.archive_file(file_in=lat_settings.source_file_path,
                        archive_dir=lat_settings.archive_dir)
-    try:
-        parse_file(tmp_file, lat_settings=lat_settings)
-    except Exception as err:
-        raise exceptions.LatviaParsingError(err) from None
+    if lat_settings.handled_file_path.exists():
+        utils.archive_file(file_in=lat_settings.handled_file_path,
+                           archive_dir=lat_settings.archive_dir)
 
+    parse_file(tmp_file, lat_settings=lat_settings)
     utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
                         remoute_dir=lat_settings.remote_dir)
     os.remove(tmp_file)
