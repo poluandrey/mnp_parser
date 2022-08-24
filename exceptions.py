@@ -23,3 +23,8 @@ class SourceMnpFileNotExists(Error):
 class LatviaHandlingError(Error):
     """raise in case of error during parse Latvia file"""
     pass
+
+
+class MoreThanOneSourceFilesFound(Error):
+    """raise in case of more than one source files found"""
+    pass

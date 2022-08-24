@@ -32,5 +32,12 @@ class TestGetLatviaSettings(unittest.TestCase):
         self.assertIsInstance(lat_settings, utils.LatSettings)
 
 
+class TestGetBelarusSettings(unittest.TestCase):
+    def test_get_belarus_settings(self):
+        bel_settings = utils.get_belarus_settings()
+
+        self.assertIsInstance(bel_settings, utils.BelSettings)
+
+
 if __name__ == '__main__':
     unittest.main()

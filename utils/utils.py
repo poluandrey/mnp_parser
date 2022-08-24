@@ -24,6 +24,7 @@ LatSettings = namedtuple(
         'remote_dir'
     ]
 )
+
 BelSettings = namedtuple(
     'Belarus',
     [
