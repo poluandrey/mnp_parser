@@ -15,8 +15,18 @@ class CreateConfigDirError(Error):
     pass
 
 
-class SourceMnpFileNotExists(Error):
+class SourceFileError(Error):
+    """main error raised in case of error with source file"""
+    pass
+
+
+class SourceMnpFileNotExists(SourceFileError):
     """raise in case of source mnp file not exists"""
+    pass
+
+
+class SourceMnpFileIsEmpty(SourceFileError):
+    """raise in case empty source file"""
     pass
 
 
@@ -35,6 +45,4 @@ class LatviaParserError(Error):
     pass
 
 
-class SourceMnpFileIsEmpty(Error):
-    """raise in case empty source file"""
-    pass
+

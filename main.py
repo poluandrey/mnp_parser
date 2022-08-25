@@ -56,8 +56,8 @@ def latvia_handler(base_settings):
         latvia_mnp.file_handler(base_settings, lat_settings)
     except exceptions.ConfigLoadError:
         print('error during load latvia settings')
-    except exceptions.SourceMnpFileNotExists:
-        print(f'{lat_settings.source_file_path} not exists')
+    except exceptions.SourceFileError as err:
+        print(f'{err}')
     except Exception:
         tb = traceback.format_exc()
         utils.send_email(text=tb, subject='Latvia parser error')

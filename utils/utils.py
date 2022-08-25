@@ -32,6 +32,7 @@ class LatSettings(NamedTuple):
     handled_file_dir: Path
     handled_file_name: str
     handled_file_path: Path
+    lock_file: Path
     archive_dir: Path
     ftp_dir: Path
     ftp_group_id: int
@@ -42,6 +43,7 @@ class KztSettings(NamedTuple):
     handled_file_dir: Path
     handled_file_name: str
     handled_file_path: Path
+    lock_file: Path
     archive_dir: Path
     ssh_server: str
     ssh_port: int
@@ -58,6 +60,7 @@ class BelSettings(NamedTuple):
     handled_file_dir: Path
     handled_file_name: str
     handled_file_path: Path
+    lock_file: Path
     archive_dir: Path
     ftp_dir: Path
     ftp_group_id: int
@@ -75,6 +78,8 @@ def get_latvia_settings() -> LatSettings:
             settings.LAT_HANDLED_FILE_NAME,
             settings.LAT_HANDLED_FILE_DIR.joinpath(
                 settings.LAT_HANDLED_FILE_NAME),
+            settings.LAT_HANDLED_FILE_DIR.joinpath(
+                f'{settings.LAT_HANDLED_FILE_NAME}.lock'),
             settings.LAT_ARCHIVE_DIR,
             settings.LAT_FTP_DIR,
             settings.LAT_FTP_GROUP_ID,
@@ -91,6 +96,8 @@ def get_kazakhstan_settings() -> KztSettings:
             settings.KZT_HANDLED_FILE_NAME,
             settings.KZT_HANDLED_FILE_DIR.joinpath(
                 settings.KZT_HANDLED_FILE_NAME),
+            settings.KZT_HANDLED_FILE_DIR.joinpath(
+                f'{settings.KZT_HANDLED_FILE_NAME}.lock'),
             settings.KZT_ARCHIVE_DIR,
             settings.KZT_SSH_SERVER,
             settings.KZT_SSH_PORT,
@@ -114,6 +121,8 @@ def get_belarus_settings() -> BelSettings:
             settings.BEL_HANDLED_FILE_NAME,
             settings.BEL_HANDLED_FILE_DIR.joinpath(
                 settings.BEL_HANDLED_FILE_NAME),
+            settings.BEL_HANDLED_FILE_DIR.joinpath(
+                f'{settings.BEL_HANDLED_FILE_NAME}.lock'),
             settings.BEL_ARCHIVE_DIR,
             settings.BEL_FTP_DIR,
             settings.BEL_FTP_GROUP_ID,
@@ -153,6 +162,7 @@ def create_folder(config_obj) -> None:
         if isinstance(param, Path) \
                 and not param.exists() and not os.path.splitext(param)[1]:
             try:
+                print(param)
                 os.makedirs(param)
             except FileExistsError:
                 continue
@@ -180,7 +190,7 @@ def send_email(text: str, subject: str) -> None:
 
 
 def archive_file(file_in: Path, archive_dir: Path) -> Path:
-    """copy file to archive_dir, gzip it and then delete"""
+    """copy file to archive_dir and gzip it"""
     file = os.path.basename(file_in)
     file_name, _ = os.path.splitext(file)
     archive_date = datetime.now().strftime('%d%m%Y_%H%M%S')
@@ -189,8 +199,6 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
 
     with ZipFile(archive_file_path, 'w') as archive_zip:
         archive_zip.write(file_in, arcname=file)
-    os.remove(file_in)
-
     return archive_file_path
 
 
