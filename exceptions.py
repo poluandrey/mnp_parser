@@ -28,3 +28,13 @@ class LatviaHandlingError(Error):
 class MoreThanOneSourceFilesFound(Error):
     """raise in case of more than one source files found"""
     pass
+
+
+class LatviaParserError(Error):
+    """raise in case parser error"""
+    pass
+
+
+class SourceMnpFileIsEmpty(Error):
+    """raise in case empty source file"""
+    pass
