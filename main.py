@@ -11,7 +11,7 @@ import settings
 import utils
 
 
-def parse_args():
+def create_parser():
     parser = argparse.ArgumentParser(
         description='script for parse MNP files and load DB to server')
     parser.add_argument(
@@ -20,7 +20,7 @@ def parse_args():
         choices=settings.SUPPORTED_COUNTRIES
     )
     args = parser.parse_args()
-    return args
+    return parser
 
 
 def kazakhstan_handler(base_settings):
@@ -37,15 +37,12 @@ def kazakhstan_handler(base_settings):
     kazakhstan_mnp.file_handler(base_settings, kzt_settings)
 
 
-
 def belarus_handler(base_settings):
     try:
         bel_settings = utils.get_belarus_settings()
         utils.create_folder(bel_settings)
         belarus_mnp.file_handler(base_settings, bel_settings)
-    except exceptions.SourceMnpFileNotExists as err:
-        print(err)
-    except exceptions.MoreThanOneSourceFilesFound as err:
+    except exceptions.SourceFileError as err:
         print(err)
 
 
@@ -70,7 +67,8 @@ def latvia_handler(base_settings):
 def main():
     base_settings = utils.get_base_settings()
     utils.create_folder(base_settings)
-    args = parse_args()
+    parser = create_parser()
+    args = parser.parse_args()
     if args.country == 'latvia':
         latvia_handler(base_settings)
     elif args.country == 'belarus':

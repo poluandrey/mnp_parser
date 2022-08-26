@@ -25,8 +25,8 @@ def parse_file(file_in: Path,
         out_csv = csv.writer(f_out, delimiter=';')
 
         for row in in_csv:
-            if not row:
-                continue
+            if not row or not all(row):
+                raise exceptions.LatviaParserError(f'empty row or cell found!!\n\n{row}')
             try:
                 rn: str = row[3].strip()[0:3]
                 if rn in rn_key and rn.startswith('BC'):
@@ -50,7 +50,6 @@ def parse_file(file_in: Path,
 
 def file_handler(base_settings: utils.BaseSettings,
                  lat_settings: utils.LatSettings):
-
     if not lat_settings.source_file_path.exists():
         raise exceptions.SourceMnpFileNotExists(
             f'{lat_settings.source_file_path} does not exists')
@@ -73,17 +72,17 @@ def file_handler(base_settings: utils.BaseSettings,
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
                          subject='Latvia mnp parser error')
-        delete_files(lat_settings, tmp_file)
+        delete_temp_files(lat_settings, tmp_file)
         return
 
     shutil.move(lat_settings.lock_file, lat_settings.handled_file_path)
     utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
                         remoute_dir=lat_settings.remote_dir)
 
-    delete_files(lat_settings, tmp_file)
+    delete_temp_files(lat_settings, tmp_file)
 
 
-def delete_files(lat_settings: utils.LatSettings, *args):
+def delete_temp_files(lat_settings: utils.LatSettings, *args):
     for file in args:
         if file.exists():
             os.remove(file)

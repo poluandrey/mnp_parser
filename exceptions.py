@@ -30,17 +30,22 @@ class SourceMnpFileIsEmpty(SourceFileError):
     pass
 
 
+class MoreThanOneSourceFilesFound(SourceFileError):
+    """raise in case of more than one source files found"""
+    pass
+
+
 class LatviaHandlingError(Error):
     """raise in case of error during parse Latvia file"""
     pass
 
 
-class MoreThanOneSourceFilesFound(Error):
-    """raise in case of more than one source files found"""
+class LatviaParserError(Error):
+    """raise in case parser error"""
     pass
 
 
-class LatviaParserError(Error):
+class BelarusParserError(Error):
     """raise in case parser error"""
     pass
 

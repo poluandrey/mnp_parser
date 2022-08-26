@@ -15,7 +15,6 @@ class TestArchiveFile(unittest.TestCase):
         file = utils.archive_file(test_file, archive_dir)
 
         self.assertTrue(file.exists(), 'archive file does not exist')
-        self.assertFalse(test_file.exists(), 'test_file was not delete')
 
 
 class TestGetBaseSettings(unittest.TestCase):
