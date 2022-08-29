@@ -21,7 +21,7 @@ SSH_USER = 'test_user'
 
 # Latvia's settings
 # path tp directory with source file
-LAT_SOURCE_DIR = FILE_STORAGE.joinpath('latvia_source')
+LAT_SOURCE_DIR = pathlib.Path(FILE_STORAGE.joinpath('latvia_source'))
 # source file name
 LAT_SOURCE_FILE_NAME = 'mnp_latvia.csv'
 # path to directory with parsed mnp file
