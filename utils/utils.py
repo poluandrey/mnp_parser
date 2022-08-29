@@ -24,7 +24,7 @@ class SFTP(FTP):
 class BaseSettings(NamedTuple):
     tmp_dir: Path
     archive_dir: Path
-    test_dir: Path
+    file_storage: Path
     log_dir: Path
     email_server: str
     email_port: int
@@ -148,7 +148,7 @@ def get_base_settings() -> BaseSettings:
         base_settings = BaseSettings(
             settings.TMP_DIR,
             settings.ARCHIVE_DIR,
-            settings.TEST_DIR,
+            settings.FILE_STORAGE,
             settings.LOG_DIR,
             settings.EMAIL_SERVER,
             settings.EMAIL_PORT,
