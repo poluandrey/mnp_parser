@@ -28,10 +28,8 @@ def kazakhstan_handler(base_settings):
         kazakhstan_mnp.file_handler(base_settings, kzt_settings)
     except exceptions.CreateConfigDirError:
         print('error during create KZ folders')
-        return
     except exceptions.ConfigLoadError:
         print('error during load kazakhstan settings')
-        return
     except exceptions.KzFileHandlingError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
@@ -52,7 +50,10 @@ def latvia_handler(base_settings):
         lat_settings = utils.get_latvia_settings()
         utils.create_folder(lat_settings)
         latvia_mnp.file_handler(base_settings, lat_settings)
-    except exceptions.ConfigLoadError:
+    except exceptions.ConfigLoadError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb})',
+                         subject='Kazakhstan mnp parser error')
         print('error during load latvia settings')
     except exceptions.SourceFileError as err:
         print(f'{err}')

@@ -19,7 +19,7 @@ SSH_SERVER = '192.168.0.1'
 SSH_PORT = 22
 SSH_USER = 'test_user'
 
-# Latvia settings
+# Latvia's settings
 # path tp directory with source file
 LAT_SOURCE_DIR = FILE_STORAGE.joinpath('latvia_source')
 # source file name
