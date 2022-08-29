@@ -26,15 +26,18 @@ def create_parser():
 def kazakhstan_handler(base_settings):
     try:
         kzt_settings = utils.get_kazakhstan_settings()
-    except exceptions.ConfigLoadError:
-        print('error during load latvia settings')
-        return
-    try:
         utils.create_folder(kzt_settings)
+        kazakhstan_mnp.file_handler(base_settings, kzt_settings)
     except exceptions.CreateConfigDirError:
-        print('error during create KZT folder')
+        print('error during create KZ folders')
         return
-    kazakhstan_mnp.file_handler(base_settings, kzt_settings)
+    except exceptions.ConfigLoadError:
+        print('error during load kazakhstan settings')
+        return
+    except exceptions.KzFileHandlingError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb})',
+                         subject='Kazakhstan mnp parser error')
 
 
 def belarus_handler(base_settings):

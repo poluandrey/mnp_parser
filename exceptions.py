@@ -35,6 +35,11 @@ class MoreThanOneSourceFilesFound(SourceFileError):
     pass
 
 
+class BadSourceZipFile(SourceFileError):
+    """raise in case of more or less one file in the zip archive found"""
+    pass
+
+
 class LatviaHandlingError(Error):
     """raise in case of error during parse Latvia file"""
     pass
@@ -50,4 +55,11 @@ class BelarusParserError(Error):
     pass
 
 
+class KzParserError(Error):
+    """raise in case parser error"""
+    pass
 
+
+class KzFileHandlingError(Error):
+    """raise in case file handling error"""
+    pass

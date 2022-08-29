@@ -2,12 +2,23 @@ import os
 import smtplib
 from datetime import datetime
 from email.message import EmailMessage
+from ftplib import FTP
 from pathlib import Path
 from typing import List, NamedTuple
 from zipfile import ZipFile
 
 import exceptions
 import settings
+
+
+class SFTP(FTP):
+
+    def __init__(self, host, port, user, passwd):
+        super(SFTP, self).__init__()
+        if host and port:
+            self.connect(host, port)
+            if user:
+                self.login(user, passwd)
 
 
 class BaseSettings(NamedTuple):
