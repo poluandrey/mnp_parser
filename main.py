@@ -18,7 +18,6 @@ def create_parser():
         help='country for load',
         choices=settings.SUPPORTED_COUNTRIES
     )
-    args = parser.parse_args()
     return parser
 
 
