@@ -19,7 +19,8 @@ def create_parser():
     )
     parser.add_argument(
         '--check-config',
-        help='return config for provided country or base config if "base" specified',
+        help='return config for provided country or'
+             ' base config if "base" specified',
         metavar='check_config'
     )
     parser.add_argument(

@@ -7,8 +7,8 @@
 ``python -m venv venv``
 2) install requirements
 ``pip install -r requirements.txt``
-3) create working config
-``mv example_settings.py settings.py``
+3) fill .env file
+``mv .env_example .env``
 4) get help message
 ``python main.py --help``
 5) parse BD for country_name
