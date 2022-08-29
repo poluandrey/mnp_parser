@@ -53,7 +53,7 @@ def latvia_handler(base_settings):
     except exceptions.ConfigLoadError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
-                         subject='Kazakhstan mnp parser error')
+                         subject='Latvia mnp parser error')
         print('error during load latvia settings')
     except exceptions.SourceFileError as err:
         print(f'{err}')
