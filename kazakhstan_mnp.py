@@ -1,12 +1,11 @@
 import csv
-from datetime import datetime, timezone
 import os
 import shutil
 import traceback
-from zipfile import ZipFile
-
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+from zipfile import ZipFile
 
 import exceptions
 import utils
@@ -22,7 +21,9 @@ def retrieve_ftp_files(kz_settings) -> List[Tuple[str, Dict[str, str]]]:
     return files
 
 
-def download_latest_file(file_name, base_settings, kz_settings: utils.KztSettings) -> Path:
+def download_latest_file(file_name,
+                         base_settings,
+                         kz_settings: utils.KztSettings) -> Path:
     kz_tmp = base_settings.tmp_dir.joinpath(file_name)
     kz_ftp = utils.SFTP(host=kz_settings.ssh_server,
                         port=kz_settings.ssh_port,
@@ -40,13 +41,15 @@ def send_alarm(modify_date: str):
     day_between = current_time - modify_date
 
     if day_between.days > 7:
-        utils.send_email(text=f'last FTP modify was {day_between.days} days ago',
+        utils.send_email(text=f'last FTP modify was '
+                              f'{day_between.days} days ago',
                          subject='WARNING: Kazakhstan last update')
 
 
 def parse_file(file_in: Path, kz_settings: utils.KztSettings) -> None:
     try:
-        with open(file_in, 'r') as tmp_mnp, open(kz_settings.lock_file, 'w') as lock_db:
+        with open(file_in, 'r') as tmp_mnp, \
+                open(kz_settings.lock_file, 'w') as lock_db:
             tmp_csv = csv.DictReader(tmp_mnp)
             db_csv = csv.writer(lock_db, delimiter=';')
             for row in tmp_csv:
@@ -61,7 +64,8 @@ def parse_file(file_in: Path, kz_settings: utils.KztSettings) -> None:
                         row['OwnerId'], 1]
                 db_csv.writerow(line)
     except Exception as err:
-        raise exceptions.KzParserError(f'an error during parse {file_in}\n\n{err}') from None
+        raise exceptions.KzParserError(
+            f'an error during parse {file_in}\n\n{err}') from None
 
 
 def delete_temp_files(*args):
@@ -70,7 +74,8 @@ def delete_temp_files(*args):
             os.remove(file)
 
 
-def file_handler(base_settings: utils.BaseSettings, kz_settings: utils.KztSettings):
+def file_handler(base_settings: utils.BaseSettings,
+                 kz_settings: utils.KztSettings):
     try:
         files = retrieve_ftp_files(kz_settings)
         files.sort(key=lambda x: x[1]['modify'], reverse=True)
@@ -83,11 +88,13 @@ def file_handler(base_settings: utils.BaseSettings, kz_settings: utils.KztSettin
         with ZipFile(tmp_archive, 'r') as tmp_zip:
             archive_files = tmp_zip.namelist()
             if not archive_files or len(archive_files) != 1:
-                raise exceptions.BadSourceZipFile(f'please check {tmp_archive} attachment')
+                raise exceptions.BadSourceZipFile(
+                    f'please check {tmp_archive} attachment')
 
             archive_name = archive_files[0]
             try:
-                tmp_file = Path(tmp_zip.extract(archive_name, base_settings.tmp_dir))
+                tmp_file = Path(tmp_zip.extract(archive_name,
+                                                base_settings.tmp_dir))
             except exceptions.KzParserError as err:
                 tb = traceback.format_exc()
                 utils.send_email(text=f'{err}\n\n{tb})',

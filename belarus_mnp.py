@@ -25,7 +25,8 @@ def parse_file(file_in, bel_settings):
         del rows[0]
         for row in rows:
             if not all(row):
-                raise exceptions.BelarusParserError(f'empty row found!\n\n{row}') from None
+                raise exceptions.BelarusParserError(
+                    f'empty row found!\n\n{row}') from None
             row[0] = f'2570{row[0]}'
             row[2] = int(datetime.strptime(row[2],
                                            '%d.%m.%Y %H:%M:%S').timestamp())

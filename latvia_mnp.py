@@ -26,7 +26,8 @@ def parse_file(file_in: Path,
 
         for row in in_csv:
             if not row or not all(row):
-                raise exceptions.LatviaParserError(f'empty row or cell found!!\n\n{row}')
+                raise exceptions.LatviaParserError(
+                    f'empty row or cell found!!\n\n{row}')
             try:
                 rn: str = row[3].strip()[0:3]
                 if rn in rn_key and rn.startswith('BC'):
