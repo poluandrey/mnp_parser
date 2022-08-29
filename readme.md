@@ -11,3 +11,5 @@
 ``mv example_settings.py settings.py``
 4) get help message
 ``python main.py --help``
+5) parse BD for country_name
+``python main.py --country country_name``
