@@ -169,7 +169,6 @@ def create_folder(config_obj) -> None:
     if param from settings is directory and not exists then try to create it
     """
     for param in config_obj:
-        # print(param, type(param))
         if isinstance(param, Path) \
                 and not param.exists() and not os.path.splitext(param)[1]:
             try:

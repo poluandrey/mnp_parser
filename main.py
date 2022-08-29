@@ -1,5 +1,5 @@
 import argparse
-import os
+import pprint
 import traceback
 
 import belarus_mnp
@@ -15,9 +15,21 @@ def create_parser():
         description='script for parse MNP files and load DB to server')
     parser.add_argument(
         '--country',
-        help='country for load',
-        choices=settings.SUPPORTED_COUNTRIES
+        help='country for processing',
     )
+    parser.add_argument(
+        '--check-config',
+        help='return config for provided country or base config if "base" specified',
+        metavar='check_config'
+    )
+    parser.add_argument(
+        '--supported-countries',
+        nargs='?',
+        const=True,
+        help='return list of supporting country',
+        metavar='supported_countries'
+    )
+
     return parser
 
 
@@ -25,12 +37,12 @@ def kazakhstan_handler(base_settings):
     try:
         kzt_settings = utils.get_kazakhstan_settings()
         utils.create_folder(kzt_settings)
-        kazakhstan_mnp.file_handler(base_settings, kzt_settings)
+        kazakhstan_mnp.processing_mnp(base_settings, kzt_settings)
     except exceptions.CreateConfigDirError:
         print('error during create KZ folders')
     except exceptions.ConfigLoadError:
         print('error during load kazakhstan settings')
-    except exceptions.KzFileHandlingError as err:
+    except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
                          subject='Kazakhstan mnp parser error')
@@ -40,9 +52,18 @@ def belarus_handler(base_settings):
     try:
         bel_settings = utils.get_belarus_settings()
         utils.create_folder(bel_settings)
-        belarus_mnp.file_handler(base_settings, bel_settings)
+        belarus_mnp.processing_mnp(base_settings, bel_settings)
+    except exceptions.CreateConfigDirError:
+        print('error during create BEL folders')
+    except exceptions.ConfigLoadError:
+        print('error during load belarus settings')
     except exceptions.SourceFileError as err:
-        print(err)
+        utils.send_email(text=f'Belarus source file error\n\n{err}',
+                         subject='Belarus parser error')
+    except exceptions.MnpProcessingError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb}',
+                         subject='Belarus parser error')
 
 
 def latvia_handler(base_settings):
@@ -56,14 +77,13 @@ def latvia_handler(base_settings):
                          subject='Latvia mnp parser error')
         print('error during load latvia settings')
     except exceptions.SourceFileError as err:
-        print(f'{err}')
-    except Exception:
+        print('Latvia source file error')
+        utils.send_email(text=f'latvia source file error\n\n{err})',
+                         subject='Latvia mnp parser error')
+    except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
-        utils.send_email(text=tb, subject='Latvia parser error')
-        tmp_file = base_settings.tmp_dir.joinpath(
-            lat_settings.source_file_name)
-        if tmp_file.exists():
-            os.remove(tmp_file)
+        utils.send_email(text=f'{err}\n\n{tb}',
+                         subject='Latvia parser error')
 
 
 def main():
@@ -77,6 +97,21 @@ def main():
         belarus_handler(base_settings)
     elif args.country == 'kazakhstan':
         kazakhstan_handler(base_settings)
+
+    if args.check_config == 'base':
+        pprint.pprint(dict(base_settings._asdict()), indent=4)
+    elif args.check_config == 'latvia':
+        lat_settings = utils.get_latvia_settings()
+        pprint.pprint(dict(lat_settings._asdict()), indent=4)
+    elif args.check_config == 'kazakhstan':
+        lat_settings = utils.get_kazakhstan_settings()
+        pprint.pprint(dict(lat_settings._asdict()), indent=4)
+    elif args.check_config == 'belarus':
+        lat_settings = utils.get_belarus_settings()
+        pprint.pprint(dict(lat_settings._asdict()), indent=4)
+
+    if args.supported_countries:
+        pprint.pprint(settings.SUPPORTED_COUNTRIES)
 
 
 if __name__ == '__main__':

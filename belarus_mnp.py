@@ -47,8 +47,8 @@ def delete_tmp_files(settings: utils.BelSettings, *args):
         os.remove(settings.lock_file)
 
 
-def file_handler(base_settings: utils.BaseSettings,
-                 bel_settings: utils.BelSettings):
+def processing_mnp(base_settings: utils.BaseSettings,
+                   bel_settings: utils.BelSettings):
 
     source_file_mask = bel_settings.source_dir.joinpath(
         bel_settings.source_file_mask)
@@ -65,25 +65,29 @@ def file_handler(base_settings: utils.BaseSettings,
         raise exceptions.SourceMnpFileIsEmpty(
             f'{source_file} is empty'
         )
-
-    tmp_file = Path(shutil.copy(source_file, base_settings.tmp_dir))
-    utils.archive_file(source_file, bel_settings.archive_dir)
-
-    if bel_settings.handled_file_path.exists():
-        utils.archive_file(bel_settings.handled_file_path,
-                           bel_settings.archive_dir)
-
     try:
-        parse_file(tmp_file, bel_settings)
-    except exceptions.BelarusParserError as err:
-        tb = traceback.format_exc()
-        utils.send_email(text=f'{err}\n\n{tb})',
-                         subject='Belarus mnp parser error')
+        tmp_file = Path(shutil.copy(source_file, base_settings.tmp_dir))
+        utils.archive_file(source_file, bel_settings.archive_dir)
+
+        if bel_settings.handled_file_path.exists():
+            utils.archive_file(bel_settings.handled_file_path,
+                               bel_settings.archive_dir)
+
+        try:
+            parse_file(tmp_file, bel_settings)
+        except exceptions.ParserError as err:
+            delete_tmp_files(bel_settings, source_file, tmp_file)
+            tb = traceback.format_exc()
+            utils.send_email(text=f'{err}\n\n{tb})',
+                             subject='Belarus mnp parser error')
+            return
+
+        shutil.move(bel_settings.lock_file, bel_settings.handled_file_path)
+        utils.copy_to_smssw(bel_settings.handled_file_path,
+                            bel_settings.remote_dir)
+
         delete_tmp_files(bel_settings, source_file, tmp_file)
-        return
-
-    shutil.move(bel_settings.lock_file, bel_settings.handled_file_path)
-    utils.copy_to_smssw(bel_settings.handled_file_path,
-                        bel_settings.remote_dir)
-
-    delete_tmp_files(bel_settings, source_file, tmp_file)
+    except Exception as err:
+        delete_tmp_files(bel_settings, source_file, tmp_file)
+        raise exceptions.MnpProcessingError(
+            f"an error during processing Belarus's mnp\n\n{err}") from None

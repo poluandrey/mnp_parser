@@ -40,7 +40,7 @@ class BadSourceZipFile(SourceFileError):
     pass
 
 
-class LatviaHandlingError(Error):
+class LatviaFileHandlingError(Error):
     """raise in case of error during parse Latvia file"""
     pass
 
@@ -55,11 +55,16 @@ class BelarusParserError(Error):
     pass
 
 
-class KzParserError(Error):
+class BelarusFileHandlingError(Error):
+    """raise in case file handling error"""
+    pass
+
+
+class ParserError(Error):
     """raise in case parser error"""
     pass
 
 
-class KzFileHandlingError(Error):
+class MnpProcessingError(Error):
     """raise in case file handling error"""
     pass

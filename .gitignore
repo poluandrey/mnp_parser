@@ -4,5 +4,5 @@ mnp_test/
 log/
 __pycache__/
 
-settings.py
 .gitignore
+.env

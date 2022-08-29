@@ -64,7 +64,7 @@ def parse_file(file_in: Path, kz_settings: utils.KztSettings) -> None:
                         row['OwnerId'], 1]
                 db_csv.writerow(line)
     except Exception as err:
-        raise exceptions.KzParserError(
+        raise exceptions.ParserError(
             f'an error during parse {file_in}\n\n{err}') from None
 
 
@@ -74,8 +74,8 @@ def delete_temp_files(*args):
             os.remove(file)
 
 
-def file_handler(base_settings: utils.BaseSettings,
-                 kz_settings: utils.KztSettings):
+def processing_mnp(base_settings: utils.BaseSettings,
+                   kz_settings: utils.KztSettings):
     try:
         files = retrieve_ftp_files(kz_settings)
         files.sort(key=lambda x: x[1]['modify'], reverse=True)
@@ -85,25 +85,28 @@ def file_handler(base_settings: utils.BaseSettings,
         tmp_archive = download_latest_file(file, base_settings, kz_settings)
         shutil.copy(tmp_archive, kz_settings.archive_dir)
 
-        with ZipFile(tmp_archive, 'r') as tmp_zip:
-            archive_files = tmp_zip.namelist()
+        with ZipFile(tmp_archive, 'r') as zip_file:
+            archive_files = zip_file.namelist()
             if not archive_files or len(archive_files) != 1:
                 raise exceptions.BadSourceZipFile(
                     f'please check {tmp_archive} attachment')
 
             archive_name = archive_files[0]
             try:
-                tmp_file = Path(tmp_zip.extract(archive_name,
-                                                base_settings.tmp_dir))
-            except exceptions.KzParserError as err:
+                tmp_file = Path(zip_file.extract(archive_name,
+                                                 base_settings.tmp_dir))
+                parse_file(tmp_file, kz_settings)
+            except exceptions.ParserError as err:
+                delete_temp_files(tmp_file, tmp_archive, kz_settings.lock_file)
                 tb = traceback.format_exc()
                 utils.send_email(text=f'{err}\n\n{tb})',
                                  subject='Kazakhstan mnp parser error')
-                delete_temp_files(tmp_archive, tmp_file, kz_settings.lock_file)
+
                 return
-            parse_file(tmp_file, kz_settings)
 
             shutil.move(kz_settings.lock_file, kz_settings.handled_file_path)
             delete_temp_files(tmp_archive, tmp_file)
     except Exception as err:
-        raise exceptions.KzFileHandlingError(err)
+        delete_temp_files(tmp_file, tmp_archive, kz_settings.lock_file)
+        raise exceptions.MnpProcessingError(
+            f"an error during processing Kazakhstan mnp\n\n{err}") from None

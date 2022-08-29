@@ -58,29 +58,32 @@ def file_handler(base_settings: utils.BaseSettings,
     if not os.stat(lat_settings.source_file_path).st_size:
         raise exceptions.SourceMnpFileIsEmpty(
             f'{lat_settings.source_file_path} is empty')
-
-    tmp_file = Path(shutil.copy(lat_settings.source_file_path,
-                                base_settings.tmp_dir))
-    utils.archive_file(file_in=lat_settings.source_file_path,
-                       archive_dir=lat_settings.archive_dir)
-    if lat_settings.handled_file_path.exists():
-        utils.archive_file(file_in=lat_settings.handled_file_path,
-                           archive_dir=lat_settings.archive_dir)
-
     try:
-        parse_file(tmp_file, lat_settings=lat_settings)
-    except exceptions.LatviaParserError as err:
-        tb = traceback.format_exc()
-        utils.send_email(text=f'{err}\n\n{tb})',
-                         subject='Latvia mnp parser error')
+        tmp_file = Path(shutil.copy(lat_settings.source_file_path,
+                                    base_settings.tmp_dir))
+        utils.archive_file(file_in=lat_settings.source_file_path,
+                           archive_dir=lat_settings.archive_dir)
+        if lat_settings.handled_file_path.exists():
+            utils.archive_file(file_in=lat_settings.handled_file_path,
+                               archive_dir=lat_settings.archive_dir)
+
+        try:
+            parse_file(tmp_file, lat_settings=lat_settings)
+        except exceptions.ParserError as err:
+            tb = traceback.format_exc()
+            utils.send_email(text=f'{err}\n\n{tb})',
+                             subject='Latvia mnp parser error')
+            delete_temp_files(lat_settings, tmp_file)
+            return
+
+        shutil.move(lat_settings.lock_file, lat_settings.handled_file_path)
+        utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
+                            remoute_dir=lat_settings.remote_dir)
+
         delete_temp_files(lat_settings, tmp_file)
-        return
-
-    shutil.move(lat_settings.lock_file, lat_settings.handled_file_path)
-    utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
-                        remoute_dir=lat_settings.remote_dir)
-
-    delete_temp_files(lat_settings, tmp_file)
+    except Exception as err:
+        raise exceptions.MnpProcessingError(
+            f"an error during processing Latvia's mnp\n\n{err}") from None
 
 
 def delete_temp_files(lat_settings: utils.LatSettings, *args):
