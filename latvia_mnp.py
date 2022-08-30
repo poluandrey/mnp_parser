@@ -55,9 +55,9 @@ def file_handler(base_settings: utils.BaseSettings,
     logger = create_logger(__name__, base_settings.log_dir)
     logger.info('start processing')
     if not lat_settings.source_file_path.exists():
-        logger.warning(f'{lat_settings.source_file_path} does not exists')
+        logger.warning(f'{lat_settings.source_file_path} not exists')
         raise exceptions.SourceMnpFileNotExists(
-            f'{lat_settings.source_file_path} does not exists')
+            f'{lat_settings.source_file_path} not exists')
 
     if not os.stat(lat_settings.source_file_path).st_size:
         logger.warning(f'{lat_settings.source_file_path} is empty')
