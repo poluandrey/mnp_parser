@@ -56,7 +56,7 @@ def processing_mnp(base_settings: utils.BaseSettings,
     source_file_mask = bel_settings.source_dir.joinpath(
         bel_settings.source_file_mask)
     source_files = glob(str(source_file_mask))
-    logger.debug(f'source files found {source_files=}')
+
     if not source_files:
         logger.warning(f'did not find files matching pattern {source_file_mask}')
         raise exceptions.SourceMnpFileNotExists(
@@ -85,7 +85,7 @@ def processing_mnp(base_settings: utils.BaseSettings,
             logger.info('start parse file')
             parse_file(tmp_file, bel_settings)
         except exceptions.ParserError as err:
-            logger.exception(f'an exception during parsing \n\n{err}\n{archive_path=}')
+            logger.exception(f'an exception during parsing \n\n{err}\n{archive_path=}', exc_info=True, stack_info=True)
             delete_tmp_files(bel_settings, source_file, tmp_file)
             tb = traceback.format_exc()
             utils.send_email(text=f'{err}\n\n{tb})',
@@ -99,7 +99,7 @@ def processing_mnp(base_settings: utils.BaseSettings,
         delete_tmp_files(bel_settings, source_file, tmp_file)
         logger.info('finished processing')
     except Exception as err:
-        logger.exception(msg='an error during processing\n\n{err}', exc_info=True)
+        logger.exception(msg='an error during processing\n\n{err}', exc_info=True, stack_info=True)
         delete_tmp_files(bel_settings, source_file, tmp_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Belarus's mnp\n\n{err}") from None

@@ -78,7 +78,7 @@ def file_handler(base_settings: utils.BaseSettings,
             logger.info('finished parse file')
         except exceptions.ParserError as err:
             logger.exception(f'an exception during parse file\n\n{err}',
-                             exc_info=True)
+                             exc_info=True, stack_info=True)
             tb = traceback.format_exc()
             utils.send_email(text=f'an exception during parse '
                                   f'file\n\n{err}\n\n{tb})',
@@ -94,7 +94,7 @@ def file_handler(base_settings: utils.BaseSettings,
         logger.info('finished processing')
     except Exception as err:
         logger.exception(f'an error during processing \n\n{err}',
-                         exc_info=True)
+                         exc_info=True, stack_info=True)
         raise exceptions.MnpProcessingError(
             f"an error during processing Latvia's mnp\n\n{err}") from None
 
