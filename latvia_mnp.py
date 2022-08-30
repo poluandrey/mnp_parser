@@ -7,6 +7,7 @@ from pathlib import Path
 
 import exceptions
 import utils
+from utils.loger_util import create_logger
 
 
 def parse_file(file_in: Path,
@@ -51,11 +52,15 @@ def parse_file(file_in: Path,
 
 def file_handler(base_settings: utils.BaseSettings,
                  lat_settings: utils.LatSettings):
+    logger = create_logger(__name__, base_settings.log_dir)
+    logger.info('start processing')
     if not lat_settings.source_file_path.exists():
+        logger.warning(f'{lat_settings.source_file_path} does not exists')
         raise exceptions.SourceMnpFileNotExists(
             f'{lat_settings.source_file_path} does not exists')
 
     if not os.stat(lat_settings.source_file_path).st_size:
+        logger.warning(f'{lat_settings.source_file_path} is empty')
         raise exceptions.SourceMnpFileIsEmpty(
             f'{lat_settings.source_file_path} is empty')
     try:
@@ -68,10 +73,15 @@ def file_handler(base_settings: utils.BaseSettings,
                                archive_dir=lat_settings.archive_dir)
 
         try:
+            logger.info('start parse file')
             parse_file(tmp_file, lat_settings=lat_settings)
+            logger.info('finished parse file')
         except exceptions.ParserError as err:
+            logger.exception(f'an exception during parse file\n\n{err}',
+                             exc_info=True)
             tb = traceback.format_exc()
-            utils.send_email(text=f'{err}\n\n{tb})',
+            utils.send_email(text=f'an exception during parse '
+                                  f'file\n\n{err}\n\n{tb})',
                              subject='Latvia mnp parser error')
             delete_temp_files(lat_settings, tmp_file)
             return
@@ -81,7 +91,10 @@ def file_handler(base_settings: utils.BaseSettings,
                             remoute_dir=lat_settings.remote_dir)
 
         delete_temp_files(lat_settings, tmp_file)
+        logger.info('finished processing')
     except Exception as err:
+        logger.exception(f'an error during processing \n\n{err}',
+                         exc_info=True)
         raise exceptions.MnpProcessingError(
             f"an error during processing Latvia's mnp\n\n{err}") from None
 
