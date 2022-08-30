@@ -8,7 +8,7 @@ class TestArchiveFile(unittest.TestCase):
 
     def test_archive(self):
         archive_dir = settings.ARCHIVE_DIR
-        test_file = settings.TEST_DIR.joinpath('test.txt')
+        test_file = settings.FILE_STORAGE.joinpath('test.txt')
         if not test_file.exists():
             with open(test_file, 'w') as f:
                 f.write('this is test file')

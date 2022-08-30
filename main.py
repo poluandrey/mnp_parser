@@ -76,10 +76,8 @@ def latvia_handler(base_settings):
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
                          subject='Latvia mnp parser error')
-        print('error during load latvia settings')
     except exceptions.SourceFileError as err:
-        print('Latvia source file error')
-        utils.send_email(text=f'latvia source file error\n\n{err})',
+        utils.send_email(text=f'latvia source file error\n\n{err}',
                          subject='Latvia mnp parser error')
     except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
@@ -98,6 +96,8 @@ def main():
         belarus_handler(base_settings)
     elif args.country == 'kazakhstan':
         kazakhstan_handler(base_settings)
+    else:
+        print('unsupported country. Use --supported-country')
 
     if args.check_config == 'base':
         pprint.pprint(dict(base_settings._asdict()), indent=4)

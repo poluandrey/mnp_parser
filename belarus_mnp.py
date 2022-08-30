@@ -10,6 +10,7 @@ import openpyxl
 
 import exceptions
 import utils
+from utils.loger_util import create_logger
 
 
 def parse_file(file_in, bel_settings):
@@ -49,45 +50,56 @@ def delete_tmp_files(settings: utils.BelSettings, *args):
 
 def processing_mnp(base_settings: utils.BaseSettings,
                    bel_settings: utils.BelSettings):
+    logger = create_logger(__name__, base_settings.log_dir)
 
+    logger.info('start processing')
     source_file_mask = bel_settings.source_dir.joinpath(
         bel_settings.source_file_mask)
     source_files = glob(str(source_file_mask))
+    logger.debug(f'source files found {source_files=}')
     if not source_files:
+        logger.warning(f'did not find files matching pattern {source_file_mask}')
         raise exceptions.SourceMnpFileNotExists(
-            'does not found files matching patterns')
+            'did not find files matching pattern')
     elif len(source_files) != 1:
+        logger.warning(f'to many source files found in '
+                       f'{bel_settings.source_dir}: {source_files}')
         raise exceptions.MoreThanOneSourceFilesFound(
             'to many source files found')
     source_file = Path(source_files[0])
 
     if not os.stat(source_file).st_size:
+        logger.warning(f'{source_file=} is empty')
         raise exceptions.SourceMnpFileIsEmpty(
             f'{source_file} is empty'
         )
     try:
         tmp_file = Path(shutil.copy(source_file, base_settings.tmp_dir))
-        utils.archive_file(source_file, bel_settings.archive_dir)
+        archive_path = utils.archive_file(source_file, bel_settings.archive_dir)
 
         if bel_settings.handled_file_path.exists():
             utils.archive_file(bel_settings.handled_file_path,
                                bel_settings.archive_dir)
 
         try:
+            logger.info('start parse file')
             parse_file(tmp_file, bel_settings)
         except exceptions.ParserError as err:
+            logger.exception(f'an exception during parsing \n\n{err}\n{archive_path=}')
             delete_tmp_files(bel_settings, source_file, tmp_file)
             tb = traceback.format_exc()
             utils.send_email(text=f'{err}\n\n{tb})',
                              subject='Belarus mnp parser error')
             return
-
+        logger.info('finished parse file')
         shutil.move(bel_settings.lock_file, bel_settings.handled_file_path)
         utils.copy_to_smssw(bel_settings.handled_file_path,
                             bel_settings.remote_dir)
 
         delete_tmp_files(bel_settings, source_file, tmp_file)
+        logger.info('finished processing')
     except Exception as err:
+        logger.exception(msg='an error during processing\n\n{err}', exc_info=True)
         delete_tmp_files(bel_settings, source_file, tmp_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Belarus's mnp\n\n{err}") from None
