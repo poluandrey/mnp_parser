@@ -55,14 +55,18 @@ def file_handler(base_settings: utils.BaseSettings,
     logger = create_logger(__name__, base_settings.log_dir)
     logger.info('start processing')
     if not lat_settings.source_file_path.exists():
-        logger.warning(f'{lat_settings.source_file_path} not exists')
-        raise exceptions.SourceMnpFileNotExists(
-            f'{lat_settings.source_file_path} not exists')
+        msg = f'{lat_settings.source_file_path} not exists'
+        logger.warning(msg)
+        utils.send_email(text=msg,
+                         subject='Latvia mnp parser error')
+        return
 
     if not os.stat(lat_settings.source_file_path).st_size:
-        logger.warning(f'{lat_settings.source_file_path} is empty')
-        raise exceptions.SourceMnpFileIsEmpty(
-            f'{lat_settings.source_file_path} is empty')
+        msg = f'{lat_settings.source_file_path} is empty'
+        logger.warning(msg)
+        utils.send_email(text=msg,
+                         subject='Latvia mnp parser error')
+        return
     try:
         tmp_file = Path(shutil.copy(lat_settings.source_file_path,
                                     base_settings.tmp_dir))
@@ -87,14 +91,13 @@ def file_handler(base_settings: utils.BaseSettings,
             return
 
         shutil.move(lat_settings.lock_file, lat_settings.handled_file_path)
-        utils.copy_to_smssw(file_in=lat_settings.handled_file_dir,
-                            remoute_dir=lat_settings.remote_dir)
 
         delete_temp_files(lat_settings, tmp_file)
         logger.info('finished processing')
     except Exception as err:
         logger.exception(f'an error during processing \n\n{err}',
                          exc_info=True, stack_info=True)
+        delete_temp_files(lat_settings, tmp_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Latvia's mnp\n\n{err}") from None
 

@@ -58,21 +58,24 @@ def processing_mnp(base_settings: utils.BaseSettings,
     source_files = glob(str(source_file_mask))
 
     if not source_files:
-        logger.warning(f'did not find files matching pattern {source_file_mask}')
-        raise exceptions.SourceMnpFileNotExists(
-            'did not find files matching pattern')
+        msg = f'did not find files matching pattern {source_file_mask}'
+        logger.warning(msg)
+        utils.send_email(text=msg,
+                         subject='Belarus mnp parser error')
+        return
     elif len(source_files) != 1:
-        logger.warning(f'to many source files found in '
-                       f'{bel_settings.source_dir}: {source_files}')
-        raise exceptions.MoreThanOneSourceFilesFound(
-            'to many source files found')
+        msg = f'to many source files found in {bel_settings.source_dir}: {source_files}'
+        logger.warning(msg)
+        utils.send_email(msg, 'Belarus mnp parser error')
+        return
+
     source_file = Path(source_files[0])
 
     if not os.stat(source_file).st_size:
-        logger.warning(f'{source_file=} is empty')
-        raise exceptions.SourceMnpFileIsEmpty(
-            f'{source_file} is empty'
-        )
+        msg = f'{source_file=} is empty'
+        logger.warning(msg)
+        utils.send_email(msg, 'Belarus mnp parser error')
+        return
     try:
         tmp_file = Path(shutil.copy(source_file, base_settings.tmp_dir))
         archive_path = utils.archive_file(source_file, bel_settings.archive_dir)
@@ -93,9 +96,6 @@ def processing_mnp(base_settings: utils.BaseSettings,
             return
         logger.info('finished parse file')
         shutil.move(bel_settings.lock_file, bel_settings.handled_file_path)
-        utils.copy_to_smssw(bel_settings.handled_file_path,
-                            bel_settings.remote_dir)
-
         delete_tmp_files(bel_settings, source_file, tmp_file)
         logger.info('finished processing')
     except Exception as err:

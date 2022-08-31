@@ -39,10 +39,15 @@ def kazakhstan_handler(base_settings):
         kzt_settings = utils.get_kazakhstan_settings()
         utils.create_folder(kzt_settings)
         kazakhstan_mnp.processing_mnp(base_settings, kzt_settings)
-    except exceptions.CreateConfigDirError:
-        print('error during create KZ folders')
-    except exceptions.ConfigLoadError:
-        print('error during load kazakhstan settings')
+    except exceptions.CreateConfigDirError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'error during create KZ folders\n\n{err}\n\n{tb}',
+                         subject='Kazakhstan mnp parser error')
+    except exceptions.ConfigLoadError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'error during load kazakhstan'
+                              f' settings\n\n{err}\n\n{tb})',
+                         subject='Kazakhstan mnp parser error')
     except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
@@ -54,12 +59,13 @@ def belarus_handler(base_settings):
         bel_settings = utils.get_belarus_settings()
         utils.create_folder(bel_settings)
         belarus_mnp.processing_mnp(base_settings, bel_settings)
-    except exceptions.CreateConfigDirError:
-        print('error during create BEL folders')
-    except exceptions.ConfigLoadError:
-        print('error during load belarus settings')
-    except exceptions.SourceFileError as err:
-        utils.send_email(text=f'Belarus source file error\n\n{err}',
+    except exceptions.CreateConfigDirError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb}',
+                         subject='Belarus parser error')
+    except exceptions.ConfigLoadError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb}',
                          subject='Belarus parser error')
     except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
@@ -76,9 +82,10 @@ def latvia_handler(base_settings):
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
                          subject='Latvia mnp parser error')
-    except exceptions.SourceFileError as err:
-        utils.send_email(text=f'latvia source file error\n\n{err}',
-                         subject='Latvia mnp parser error')
+    except exceptions.CreateConfigDirError as err:
+        tb = traceback.format_exc()
+        utils.send_email(text=f'{err}\n\n{tb}',
+                         subject='Latvia parser error')
     except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb}',

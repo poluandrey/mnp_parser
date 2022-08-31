@@ -4,8 +4,9 @@ from datetime import datetime
 from email.message import EmailMessage
 from ftplib import FTP
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Union, Optional
 from zipfile import ZipFile
+from paramiko import AutoAddPolicy, SSHClient
 
 import exceptions
 import settings
@@ -13,7 +14,11 @@ import settings
 
 class SFTP(FTP):
 
-    def __init__(self, host, port, user, passwd):
+    def __init__(self,
+                 host,
+                 port,
+                 user: Optional[str] = None,
+                 passwd: Optional[str] = None):
         super(SFTP, self).__init__()
         if host and port:
             self.connect(host, port)
@@ -212,9 +217,18 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
     return archive_file_path
 
 
-def copy_to_smssw(file_in: Path, remoute_dir: Path) -> None:
+def copy_to_smssw(file_in: str,
+                  remote_dir: str,
+                  settings: BaseSettings) -> None:
     """copy file via ssh to smssw"""
-    pass
+    ssh = SSHClient()
+    ssh.set_missing_host_key_policy(AutoAddPolicy())
+
+    ssh.connect(settings.ssh_server, settings.ssh_port, settings.ssh_user, look_for_keys=True)
+    with ssh.open_sftp() as sftp:
+        sftp.put(file_in, remote_dir)
+
+    ssh.close()
 
 
 def copy_to_ftp_folder():
