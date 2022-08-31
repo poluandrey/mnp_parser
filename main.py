@@ -114,7 +114,7 @@ def sync(handled_files: List[Path],
                 for line in handled_f:
                     sync_f.write(line)
 
-    utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir), base_settings)
+    utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir.joinpath(sync_dir_name)), base_settings)
 
 
 def main():
