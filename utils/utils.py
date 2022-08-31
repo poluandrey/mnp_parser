@@ -4,7 +4,7 @@ from datetime import datetime
 from email.message import EmailMessage
 from ftplib import FTP
 from pathlib import Path
-from typing import List, NamedTuple, Union, Optional
+from typing import List, NamedTuple, Optional
 from zipfile import ZipFile
 from paramiko import AutoAddPolicy, SSHClient
 
@@ -24,21 +24,6 @@ class SFTP(FTP):
             self.connect(host, port)
             if user:
                 self.login(user, passwd)
-
-
-class BaseSettings(NamedTuple):
-    tmp_dir: Path
-    archive_dir: Path
-    file_storage: Path
-    log_dir: Path
-    email_server: str
-    email_port: int
-    email_login: str
-    email_password: str
-    email_recipients: List
-    ssh_server: str
-    ssh_user: str
-    ssh_port: int
 
 
 class LatSettings(NamedTuple):
@@ -81,6 +66,27 @@ class BelSettings(NamedTuple):
     ftp_dir: Path
     ftp_group_id: int
     remote_dir: Path
+
+
+class BaseSettings(NamedTuple):
+    tmp_dir: Path
+    archive_dir: Path
+    file_storage: Path
+    log_dir: Path
+    sync_dir: Path
+    hlr_proxy_file: str
+    hlr_resale_file: str
+    email_server: str
+    email_port: int
+    email_login: str
+    email_password: str
+    email_recipients: List
+    ssh_server: str
+    ssh_user: str
+    ssh_port: int
+    lat_conf: LatSettings
+    kz_conf: KztSettings
+    bel_conf: BelSettings
 
 
 def get_latvia_settings() -> LatSettings:
@@ -155,6 +161,9 @@ def get_base_settings() -> BaseSettings:
             settings.ARCHIVE_DIR,
             settings.FILE_STORAGE,
             settings.LOG_DIR,
+            settings.SYNC_DIR,
+            settings.HLR_PROXY_FILE,
+            settings.HLR_RESALE_FILE,
             settings.EMAIL_SERVER,
             settings.EMAIL_PORT,
             settings.EMAIL_LOGIN,
@@ -163,26 +172,13 @@ def get_base_settings() -> BaseSettings:
             settings.SSH_SERVER,
             settings.SSH_USER,
             settings.SSH_PORT,
+            get_latvia_settings(),
+            get_kazakhstan_settings(),
+            get_belarus_settings()
         )
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return base_settings
-
-
-def create_folder(config_obj) -> None:
-    """
-    if param from settings is directory and not exists then try to create it
-    """
-    for param in config_obj:
-        if isinstance(param, Path) \
-                and not param.exists() and not os.path.splitext(param)[1]:
-            try:
-                print(param)
-                os.makedirs(param)
-            except FileExistsError:
-                continue
-            except OSError as err:
-                raise exceptions.CreateConfigDirError(err) from None
 
 
 def send_email(text: str, subject: str) -> None:
@@ -219,12 +215,12 @@ def archive_file(file_in: Path, archive_dir: Path) -> Path:
 
 def copy_to_smssw(file_in: str,
                   remote_dir: str,
-                  settings: BaseSettings) -> None:
+                  base_settings: BaseSettings) -> None:
     """copy file via ssh to smssw"""
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
 
-    ssh.connect(settings.ssh_server, settings.ssh_port, settings.ssh_user, look_for_keys=True)
+    ssh.connect(base_settings.ssh_server, base_settings.ssh_port, base_settings.ssh_user, look_for_keys=True)
     with ssh.open_sftp() as sftp:
         sftp.put(file_in, remote_dir)
 

@@ -1,6 +1,9 @@
 import argparse
 import pprint
 import traceback
+from pathlib import Path
+
+from typing import NamedTuple, List
 
 import belarus_mnp
 import exceptions
@@ -10,18 +13,30 @@ import settings
 import utils
 
 
+def pretty(d: NamedTuple, indent=0):
+    for key, value in d._asdict().items():
+        if isinstance(value, utils.LatSettings) or isinstance(value, utils.KztSettings) or isinstance(value, utils.BelSettings):
+            print('-' * 60)
+            print(f'{key}')
+            pretty(value, indent+4)
+        else:
+            print(' ' * indent + f'{key}: ' + str(value))
+
+
 def create_parser():
     parser = argparse.ArgumentParser(
         description='script for parse MNP files and load DB to server')
     parser.add_argument(
         '--country',
+        nargs='?',
+        required=False,
         help='country for processing',
     )
     parser.add_argument(
-        '--check-config',
+        '-config',
         help='return config for provided country or'
              ' base config if "base" specified',
-        metavar='check_config'
+        action='store_true',
     )
     parser.add_argument(
         '--supported-countries',
@@ -30,24 +45,19 @@ def create_parser():
         help='return list of supporting country',
         metavar='supported_countries'
     )
+    parser.add_argument(
+        '--sync',
+        help='join files from all DB in one file. Depending on sync type create '
+             'new file with specific format. Copy file to smssw',
+        choices=['hlr-proxy', 'hlr-resale'],
+    )
 
     return parser
 
 
 def kazakhstan_handler(base_settings):
     try:
-        kzt_settings = utils.get_kazakhstan_settings()
-        utils.create_folder(kzt_settings)
-        kazakhstan_mnp.processing_mnp(base_settings, kzt_settings)
-    except exceptions.CreateConfigDirError as err:
-        tb = traceback.format_exc()
-        utils.send_email(text=f'error during create KZ folders\n\n{err}\n\n{tb}',
-                         subject='Kazakhstan mnp parser error')
-    except exceptions.ConfigLoadError as err:
-        tb = traceback.format_exc()
-        utils.send_email(text=f'error during load kazakhstan'
-                              f' settings\n\n{err}\n\n{tb})',
-                         subject='Kazakhstan mnp parser error')
+        kazakhstan_mnp.processing_mnp(base_settings)
     except exceptions.MnpProcessingError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
@@ -56,9 +66,7 @@ def kazakhstan_handler(base_settings):
 
 def belarus_handler(base_settings):
     try:
-        bel_settings = utils.get_belarus_settings()
-        utils.create_folder(bel_settings)
-        belarus_mnp.processing_mnp(base_settings, bel_settings)
+        belarus_mnp.processing_mnp(base_settings)
     except exceptions.CreateConfigDirError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb}',
@@ -75,9 +83,7 @@ def belarus_handler(base_settings):
 
 def latvia_handler(base_settings):
     try:
-        lat_settings = utils.get_latvia_settings()
-        utils.create_folder(lat_settings)
-        latvia_mnp.file_handler(base_settings, lat_settings)
+        latvia_mnp.file_handler(base_settings)
     except exceptions.ConfigLoadError as err:
         tb = traceback.format_exc()
         utils.send_email(text=f'{err}\n\n{tb})',
@@ -92,34 +98,49 @@ def latvia_handler(base_settings):
                          subject='Latvia parser error')
 
 
+def create_file_for_sync(handled_files: List[Path],
+                         sync_type: str,
+                         base_settings: utils.BaseSettings):
+    if sync_type == 'hlr-proxy':
+        sync_dir_name = base_settings.hlr_proxy_file
+    else:
+        sync_dir_name = base_settings.hlr_resale_file
+
+    with open(base_settings.sync_dir.joinpath(
+            sync_dir_name), 'w') as sync_f:
+        for file in handled_files:
+            with open(file, 'r') as handled_f:
+                for line in handled_f:
+                    sync_f.write(line)
+
+
 def main():
     base_settings = utils.get_base_settings()
-    utils.create_folder(base_settings)
     parser = create_parser()
     args = parser.parse_args()
+
     if args.country == 'latvia':
         latvia_handler(base_settings)
     elif args.country == 'belarus':
         belarus_handler(base_settings)
     elif args.country == 'kazakhstan':
         kazakhstan_handler(base_settings)
-    else:
-        print('unsupported country. Use --supported-country')
 
-    if args.check_config == 'base':
-        pprint.pprint(dict(base_settings._asdict()), indent=4)
-    elif args.check_config == 'latvia':
-        lat_settings = utils.get_latvia_settings()
-        pprint.pprint(dict(lat_settings._asdict()), indent=4)
-    elif args.check_config == 'kazakhstan':
-        lat_settings = utils.get_kazakhstan_settings()
-        pprint.pprint(dict(lat_settings._asdict()), indent=4)
-    elif args.check_config == 'belarus':
-        lat_settings = utils.get_belarus_settings()
-        pprint.pprint(dict(lat_settings._asdict()), indent=4)
+    if args.config:
+        pretty(base_settings, 0)
 
     if args.supported_countries:
         pprint.pprint(settings.SUPPORTED_COUNTRIES)
+
+    if args.sync:
+        handled_files = [
+            base_settings.lat_conf.handled_file_path,
+            base_settings.bel_conf.handled_file_path,
+            base_settings.kz_conf.handled_file_path,
+        ]
+
+        create_file_for_sync(handled_files, args.sync, base_settings)
+
 
 
 if __name__ == '__main__':

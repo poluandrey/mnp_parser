@@ -11,9 +11,9 @@ from utils.loger_util import create_logger
 
 
 def parse_file(file_in: Path,
-               lat_settings: utils.LatSettings):
+               base_settings: utils.BaseSettings):
     """:return file_out: Path"""
-    file_out: Path = lat_settings.lock_file
+    file_out: Path = base_settings.lat_conf.lock_file
     rn2mcc: dict = {'BC2': '247002', 'BC4': '247005',
                     'BC1': '247001', 'BC3': '247003', }
     rn_key = rn2mcc.keys()
@@ -50,35 +50,34 @@ def parse_file(file_in: Path,
                     f'error in row {row} \n {err})') from None
 
 
-def file_handler(base_settings: utils.BaseSettings,
-                 lat_settings: utils.LatSettings):
+def file_handler(base_settings: utils.BaseSettings):
     logger = create_logger(__name__, base_settings.log_dir)
     logger.info('start processing')
-    if not lat_settings.source_file_path.exists():
-        msg = f'{lat_settings.source_file_path} not exists'
+    if not base_settings.lat_conf.source_file_path.exists():
+        msg = f'{base_settings.lat_conf.source_file_path} not exists'
         logger.warning(msg)
         utils.send_email(text=msg,
                          subject='Latvia mnp parser error')
         return
 
-    if not os.stat(lat_settings.source_file_path).st_size:
-        msg = f'{lat_settings.source_file_path} is empty'
+    if not os.stat(base_settings.lat_conf.source_file_path).st_size:
+        msg = f'{base_settings.lat_conf.source_file_path} is empty'
         logger.warning(msg)
         utils.send_email(text=msg,
                          subject='Latvia mnp parser error')
         return
     try:
-        tmp_file = Path(shutil.copy(lat_settings.source_file_path,
+        tmp_file = Path(shutil.copy(base_settings.lat_conf.source_file_path,
                                     base_settings.tmp_dir))
-        utils.archive_file(file_in=lat_settings.source_file_path,
-                           archive_dir=lat_settings.archive_dir)
-        if lat_settings.handled_file_path.exists():
-            utils.archive_file(file_in=lat_settings.handled_file_path,
-                               archive_dir=lat_settings.archive_dir)
+        utils.archive_file(file_in=base_settings.lat_conf.source_file_path,
+                           archive_dir=base_settings.lat_conf.archive_dir)
+        if base_settings.lat_conf.handled_file_path.exists():
+            utils.archive_file(file_in=base_settings.lat_conf.handled_file_path,
+                               archive_dir=base_settings.lat_conf.archive_dir)
 
         try:
             logger.info('start parse file')
-            parse_file(tmp_file, lat_settings=lat_settings)
+            parse_file(tmp_file, base_settings)
             logger.info('finished parse file')
         except exceptions.ParserError as err:
             logger.exception(f'an exception during parse file\n\n{err}',
@@ -87,33 +86,26 @@ def file_handler(base_settings: utils.BaseSettings,
             utils.send_email(text=f'an exception during parse '
                                   f'file\n\n{err}\n\n{tb})',
                              subject='Latvia mnp parser error')
-            delete_temp_files(lat_settings, tmp_file)
+            delete_temp_files(base_settings, tmp_file)
             return
 
-        shutil.move(lat_settings.lock_file, lat_settings.handled_file_path)
+        shutil.move(base_settings.lat_conf.lock_file, base_settings.lat_conf.handled_file_path)
 
-        delete_temp_files(lat_settings, tmp_file)
+        delete_temp_files(base_settings, tmp_file)
         logger.info('finished processing')
     except Exception as err:
         logger.exception(f'an error during processing \n\n{err}',
                          exc_info=True, stack_info=True)
-        delete_temp_files(lat_settings, tmp_file)
+        delete_temp_files(base_settings, tmp_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Latvia's mnp\n\n{err}") from None
 
 
-def delete_temp_files(lat_settings: utils.LatSettings, *args):
+def delete_temp_files(base_settings: utils.BaseSettings, *args):
     for file in args:
         if file.exists():
             os.remove(file)
-    if lat_settings.lock_file.exists():
-        os.remove(lat_settings.lock_file)
-    if lat_settings.source_file_path.exists():
-        os.remove(lat_settings.source_file_path)
-
-
-if __name__ == '__main__':
-    b_settings = utils.get_base_settings()
-    l_settings = utils.get_latvia_settings()
-    file_handler(base_settings=b_settings,
-                 lat_settings=l_settings)
+    if base_settings.lat_conf.lock_file.exists():
+        os.remove(base_settings.lat_conf.lock_file)
+    if base_settings.lat_conf.source_file_path.exists():
+        os.remove(base_settings.lat_conf.source_file_path)
