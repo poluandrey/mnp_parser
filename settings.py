@@ -13,6 +13,7 @@ SYNC_DIR = FILE_STORAGE.joinpath('sync')
 HLR_PROXY_FILE = 'hlr-proxy.csv'
 HLR_RESALE_FILE = 'hlr-resale.csv'
 SUPPORTED_COUNTRIES = list(config['SUPPORTED_COUNTRIES'].replace(' ', '').split(sep=','))
+REMOTE_SYNC_DIR = pathlib.Path(config['REMOTE_SYNC_DIR'])
 
 # email settings for local notification
 EMAIL_SERVER = config['EMAIL_SERVER']
@@ -40,8 +41,6 @@ LAT_ARCHIVE_DIR = ARCHIVE_DIR.joinpath('latvia')
 # local FTP storage
 LAT_FTP_DIR = config['LAT_FTP_DIR']
 LAT_FTP_GROUP_ID = int(config['LAT_FTP_GROUP_ID'])
-# smssw remote folder for MNP DB load
-LAT_REMOTE_DIR = pathlib.Path(config['LAT_REMOTE_DIR'])
 
 # Belarus settings
 # path tp directory with source file
@@ -57,8 +56,6 @@ BEL_ARCHIVE_DIR = ARCHIVE_DIR.joinpath('belarus')
 BEL_FTP_DIR = pathlib.Path(config['BEL_FTP_DIR'])
 # local FTP group id
 BEL_FTP_GROUP_ID = int(config['BEL_FTP_GROUP_ID'])
-# remote folder in smssw
-BEL_REMOTE_DIR = pathlib.Path(config['BEL_REMOTE_DIR'])
 
 # Kazakhstan settings
 KZT_HANDLED_FILE_DIR = FILE_STORAGE.joinpath('kazakhstan')
@@ -71,5 +68,3 @@ KZT_SSH_PASSWD = config['KZT_SSH_PASSWD']
 # local FTP storage
 KZT_FTP_DIR = pathlib.Path(config['KZT_FTP_DIR'])
 KZT_FTP_GROUP_ID = int(config['KZT_FTP_GROUP_ID'])
-# remote folder for MNP DB load
-KZT_REMOTE_DIR = config['KZT_REMOTE_DIR']

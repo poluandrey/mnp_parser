@@ -37,7 +37,6 @@ class LatSettings(NamedTuple):
     archive_dir: Path
     ftp_dir: Path
     ftp_group_id: int
-    remote_dir: Path
 
 
 class KztSettings(NamedTuple):
@@ -52,7 +51,6 @@ class KztSettings(NamedTuple):
     ssh_password: str
     ftp_dir: Path
     ftp_group_id: int
-    remote_dir: Path
 
 
 class BelSettings(NamedTuple):
@@ -65,7 +63,6 @@ class BelSettings(NamedTuple):
     archive_dir: Path
     ftp_dir: Path
     ftp_group_id: int
-    remote_dir: Path
 
 
 class BaseSettings(NamedTuple):
@@ -74,6 +71,7 @@ class BaseSettings(NamedTuple):
     file_storage: Path
     log_dir: Path
     sync_dir: Path
+    remote_sync_dir: Path
     hlr_proxy_file: str
     hlr_resale_file: str
     email_server: str
@@ -104,8 +102,7 @@ def get_latvia_settings() -> LatSettings:
                 f'{settings.LAT_HANDLED_FILE_NAME}.lock'),
             settings.LAT_ARCHIVE_DIR,
             settings.LAT_FTP_DIR,
-            settings.LAT_FTP_GROUP_ID,
-            settings.LAT_REMOTE_DIR)
+            settings.LAT_FTP_GROUP_ID)
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return latvia_settings
@@ -126,8 +123,8 @@ def get_kazakhstan_settings() -> KztSettings:
             settings.KZT_SSH_USER,
             settings.KZT_SSH_PASSWD,
             settings.KZT_FTP_DIR,
-            settings.KZT_FTP_GROUP_ID,
-            settings.KZT_REMOTE_DIR)
+            settings.KZT_FTP_GROUP_ID
+        )
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return kazakhstan_settings
@@ -147,8 +144,8 @@ def get_belarus_settings() -> BelSettings:
                 f'{settings.BEL_HANDLED_FILE_NAME}.lock'),
             settings.BEL_ARCHIVE_DIR,
             settings.BEL_FTP_DIR,
-            settings.BEL_FTP_GROUP_ID,
-            settings.BEL_REMOTE_DIR)
+            settings.BEL_FTP_GROUP_ID
+        )
     except AttributeError as err:
         raise exceptions.ConfigLoadError(err) from None
     return belarus_settings
@@ -162,6 +159,7 @@ def get_base_settings() -> BaseSettings:
             settings.FILE_STORAGE,
             settings.LOG_DIR,
             settings.SYNC_DIR,
+            settings.REMOTE_SYNC_DIR,
             settings.HLR_PROXY_FILE,
             settings.HLR_RESALE_FILE,
             settings.EMAIL_SERVER,
@@ -220,7 +218,7 @@ def copy_to_smssw(file_in: str,
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
 
-    ssh.connect(base_settings.ssh_server, base_settings.ssh_port, base_settings.ssh_user, look_for_keys=True)
+    ssh.connect(base_settings.ssh_server, base_settings.ssh_port, base_settings.ssh_user)
     with ssh.open_sftp() as sftp:
         sftp.put(file_in, remote_dir)
 

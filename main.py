@@ -98,20 +98,23 @@ def latvia_handler(base_settings):
                          subject='Latvia parser error')
 
 
-def create_file_for_sync(handled_files: List[Path],
-                         sync_type: str,
-                         base_settings: utils.BaseSettings):
+def sync(handled_files: List[Path],
+         sync_type: str,
+         base_settings: utils.BaseSettings):
     if sync_type == 'hlr-proxy':
         sync_dir_name = base_settings.hlr_proxy_file
     else:
         sync_dir_name = base_settings.hlr_resale_file
 
-    with open(base_settings.sync_dir.joinpath(
-            sync_dir_name), 'w') as sync_f:
+    sync_file = base_settings.sync_dir.joinpath(sync_dir_name)
+
+    with open(sync_file, 'w') as sync_f:
         for file in handled_files:
             with open(file, 'r') as handled_f:
                 for line in handled_f:
                     sync_f.write(line)
+
+    utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir), base_settings)
 
 
 def main():
@@ -139,7 +142,8 @@ def main():
             base_settings.kz_conf.handled_file_path,
         ]
 
-        create_file_for_sync(handled_files, args.sync, base_settings)
+        sync(handled_files, args.sync, base_settings)
+
 
 
 
