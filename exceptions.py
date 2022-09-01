@@ -68,3 +68,8 @@ class ParserError(Error):
 class MnpProcessingError(Error):
     """raise in case file handling error"""
     pass
+
+
+class SyncMnpError(Error):
+    """raise in case error during synchronization"""
+    pass

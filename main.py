@@ -11,6 +11,7 @@ import kazakhstan_mnp
 import latvia_mnp
 import settings
 import utils
+from utils.loger_util import create_logger
 
 
 def pretty(d: NamedTuple, indent=0):
@@ -101,20 +102,29 @@ def latvia_handler(base_settings):
 def sync(handled_files: List[Path],
          sync_type: str,
          base_settings: utils.BaseSettings):
-    if sync_type == 'hlr-proxy':
-        sync_dir_name = base_settings.hlr_proxy_file
-    else:
-        sync_dir_name = base_settings.hlr_resale_file
+    logger = create_logger('sync', base_settings.log_dir)
 
-    sync_file = base_settings.sync_dir.joinpath(sync_dir_name)
+    logger.info(f'start {sync_type} sync')
+    try:
+        if sync_type == 'hlr-proxy':
+            sync_dir_name = base_settings.hlr_proxy_file
+        else:
+            sync_dir_name = base_settings.hlr_resale_file
 
-    with open(sync_file, 'w') as sync_f:
-        for file in handled_files:
-            with open(file, 'r') as handled_f:
-                for line in handled_f:
-                    sync_f.write(line)
+        sync_file = base_settings.sync_dir.joinpath(sync_dir_name)
 
-    utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir.joinpath(sync_dir_name)), base_settings)
+        with open(sync_file, 'w') as sync_f:
+            for file in handled_files:
+                with open(file, 'r') as handled_f:
+                    for line in handled_f:
+                        sync_f.write(line)
+
+        utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir.joinpath(sync_dir_name)), base_settings)
+    except Exception as err:
+        logger.exception(f'an error during sync\n\n{err}', exc_info=True, stack_info=True)
+        raise exceptions.SyncMnpError(err) from None
+
+    logger.info('finished sync')
 
 
 def main():
@@ -136,15 +146,18 @@ def main():
         pprint.pprint(settings.SUPPORTED_COUNTRIES)
 
     if args.sync:
-        handled_files = [
-            base_settings.lat_conf.handled_file_path,
-            base_settings.bel_conf.handled_file_path,
-            base_settings.kz_conf.handled_file_path,
-        ]
+        try:
+            handled_files = [
+                base_settings.lat_conf.handled_file_path,
+                base_settings.bel_conf.handled_file_path,
+                base_settings.kz_conf.handled_file_path,
+            ]
 
-        sync(handled_files, args.sync, base_settings)
-
-
+            sync(handled_files, args.sync, base_settings)
+        except exceptions.SyncMnpError as err:
+            tb = traceback.format_exc()
+            utils.send_email(text=f'{err}\n\n{tb}',
+                             subject='Synchronization error')
 
 
 if __name__ == '__main__':
