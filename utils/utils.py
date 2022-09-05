@@ -6,6 +6,7 @@ from ftplib import FTP
 from pathlib import Path
 from typing import List, NamedTuple, Optional
 from zipfile import ZipFile
+
 from paramiko import AutoAddPolicy, SSHClient
 
 import exceptions
@@ -220,7 +221,9 @@ def copy_to_smssw(file_in: str,
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(AutoAddPolicy())
 
-    ssh.connect(base_settings.ssh_server, base_settings.ssh_port, base_settings.ssh_user)
+    ssh.connect(base_settings.ssh_server,
+                base_settings.ssh_port,
+                base_settings.ssh_user)
     with ssh.open_sftp() as sftp:
         sftp.put(file_in, remote_dir)
 

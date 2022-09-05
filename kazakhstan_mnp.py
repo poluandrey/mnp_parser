@@ -88,18 +88,22 @@ def processing_mnp(settings: utils.BaseSettings):
         try:
             zip_file = download_latest_file(ftp_file, settings)
         except Exception as err:
-            logger.exception('error during load file via FTP\n\n{err}', exc_info=True, stack_info=True)
+            logger.exception('error during load file via FTP\n\n{err}',
+                             exc_info=True,
+                             stack_info=True)
             raise exceptions.MnpProcessingError(err) from None
         logger.info('finished load')
 
         archive = shutil.copy(zip_file, settings.kz_conf.archive_dir)
         if settings.kz_conf.handled_file_path.exists():
-            utils.archive_file(settings.kz_conf.handled_file_path, settings.kz_conf.archive_dir)
+            utils.archive_file(settings.kz_conf.handled_file_path,
+                               settings.kz_conf.archive_dir)
 
         with ZipFile(zip_file, 'r') as zip_f:
             attachment_files = zip_f.namelist()
             if not attachment_files or len(attachment_files) != 1:
-                logger.warning(f'wrong zip attachment. Check archive {archive}')
+                logger.warning(f'wrong zip attachment. '
+                               f'Check archive {archive}')
                 raise exceptions.BadSourceZipFile(
                     f'please check {zip_file} attachment')
 
@@ -110,7 +114,9 @@ def processing_mnp(settings: utils.BaseSettings):
             logger.info('start parse file')
             parse_file(tmp_file, settings)
         except exceptions.ParserError as err:
-            logger.exception(f'an exception during parse file\n\n{err}', exc_info=True, stack_info=True)
+            logger.exception(f'an exception during parse file\n\n{err}',
+                             exc_info=True,
+                             stack_info=True)
             delete_temp_files(tmp_file, zip_file, settings.kz_conf.lock_file)
             tb = traceback.format_exc()
             utils.send_email(text=f'{err}\n\n{tb})',
@@ -118,11 +124,14 @@ def processing_mnp(settings: utils.BaseSettings):
 
             return
         logger.info('finished parse file')
-        shutil.move(settings.kz_conf.lock_file, settings.kz_conf.handled_file_path)
+        shutil.move(settings.kz_conf.lock_file,
+                    settings.kz_conf.handled_file_path)
         delete_temp_files(zip_file, tmp_file)
         logger.info('finish processing')
     except Exception as err:
-        logger.exception(f'an exception during processing\n\n{err}', exc_info=True, stack_info=True)
+        logger.exception(f'an exception during processing\n\n{err}',
+                         exc_info=True,
+                         stack_info=True)
         delete_temp_files(tmp_file, zip_file, settings.kz_conf.lock_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Kazakhstan mnp\n\n{err}") from None

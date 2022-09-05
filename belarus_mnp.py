@@ -63,7 +63,8 @@ def processing_mnp(base_settings: utils.BaseSettings):
                          subject='Belarus mnp parser error')
         return
     elif len(source_files) != 1:
-        msg = f'to many source files found in {base_settings.bel_conf.source_dir}: {source_files}'
+        msg = (f'to many source files found in '
+               f'{base_settings.bel_conf.source_dir}: {source_files}')
         logger.warning(msg)
         utils.send_email(msg, 'Belarus mnp parser error')
         return
@@ -77,7 +78,8 @@ def processing_mnp(base_settings: utils.BaseSettings):
         return
     try:
         tmp_file = Path(shutil.copy(source_file, base_settings.tmp_dir))
-        archive_path = utils.archive_file(source_file, base_settings.bel_conf.archive_dir)
+        archive_path = utils.archive_file(source_file,
+                                          base_settings.bel_conf.archive_dir)
 
         if base_settings.bel_conf.handled_file_path.exists():
             utils.archive_file(base_settings.bel_conf.handled_file_path,
@@ -87,18 +89,24 @@ def processing_mnp(base_settings: utils.BaseSettings):
             logger.info('start parse file')
             parse_file(tmp_file, base_settings)
         except exceptions.ParserError as err:
-            logger.exception(f'an exception during parsing \n\n{err}\n{archive_path=}', exc_info=True, stack_info=True)
+            logger.exception(
+                f'an exception during parsing \n\n{err}\n{archive_path=}',
+                exc_info=True,
+                stack_info=True)
             delete_tmp_files(base_settings, source_file, tmp_file)
             tb = traceback.format_exc()
             utils.send_email(text=f'{err}\n\n{tb})',
                              subject='Belarus mnp parser error')
             return
         logger.info('finished parse file')
-        shutil.move(base_settings.bel_conf.lock_file, base_settings.bel_conf.handled_file_path)
+        shutil.move(base_settings.bel_conf.lock_file,
+                    base_settings.bel_conf.handled_file_path)
         delete_tmp_files(base_settings, source_file, tmp_file)
         logger.info('finished processing')
     except Exception as err:
-        logger.exception(msg='an error during processing\n\n{err}', exc_info=True, stack_info=True)
+        logger.exception(msg='an error during processing\n\n{err}',
+                         exc_info=True,
+                         stack_info=True)
         delete_tmp_files(base_settings, source_file, tmp_file)
         raise exceptions.MnpProcessingError(
             f"an error during processing Belarus's mnp\n\n{err}") from None

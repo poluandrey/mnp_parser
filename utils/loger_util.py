@@ -1,11 +1,14 @@
 import logging
-from utils.utils import get_base_settings
 from pathlib import Path
+
+from utils.utils import get_base_settings
 
 base_settings = get_base_settings()
 
 
-def create_logger(logger_name: str, logger_path: Path = base_settings.log_dir) -> logging.Logger:
+def create_logger(logger_name: str,
+                  logger_path: Path = base_settings.log_dir
+                  ) -> logging.Logger:
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()

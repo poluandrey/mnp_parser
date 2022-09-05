@@ -16,11 +16,15 @@ def define_load_mode(files: List) -> str:
     for Port_All_* and Number_plan* return FULL
     for *Incremental* return Incremental
     """
-    port_all = any(filter(lambda n: n.startswith('Port_All') or n.startswith('Numbering_plan'), files))
-    port_inc = any(filter(lambda n: n.startswith('Port_Increment') or n.startswith('Return_Increment'), files))
-    if port_all:
+    port_all = filter(
+        lambda n: n.startswith('Port_All') or n.startswith('Numbering_plan'),
+        files)
+    port_inc = filter(
+        lambda n: n.startswith('Port_Increment') or n.startswith('Return_Increment'),
+        files)
+    if any(port_all):
         return 'full'
-    elif port_inc:
+    elif any(port_inc):
         return 'incremental'
     return 'undefined'
 
@@ -66,7 +70,8 @@ def sync(handled_files: List[Path],
             with open(tmp_file, 'wb') as out_f:
                 # concatenate source files
                 for source_file_name in files:
-                    source_file_path = base_settings.source_sync_dir.joinpath(str(source_file_name))
+                    source_file_path = base_settings.source_sync_dir.joinpath(
+                        str(source_file_name))
                     with open(source_file_path, 'rb') as in_f:
                         shutil.copyfileobj(in_f, out_f)
                     os.remove(source_file_path)
@@ -80,9 +85,10 @@ def sync(handled_files: List[Path],
                     with open(parsed_file, 'rb') as in_f:
                         shutil.copyfileobj(in_f, out_f)
 
+            source_sync_file = base_settings.sync_dir.joinpath(sync_file_name)
             with open(tmp_file, 'r') as source:
                 reader = csv.reader(source, delimiter=';')
-                with open(base_settings.sync_dir.joinpath(sync_file_name), "w") as destination:
+                with open(source_sync_file, "w") as destination:
                     writer = csv.writer(destination, delimiter=';')
                     for r in reader:
                         msisdn = r[0]
@@ -93,12 +99,21 @@ def sync(handled_files: List[Path],
                         except IndexError:
                             owner_id = None
                         if owner_id:
-                            writer.writerow((msisdn, mccmnc, port_time, owner_id))
+                            writer.writerow((msisdn,
+                                             mccmnc,
+                                             port_time,
+                                             owner_id))
                         else:
                             writer.writerow((msisdn, mccmnc, port_time))
             os.remove(tmp_file)
+            utils.copy_to_smssw(
+                str(source_sync_file),
+                str(base_settings.remote_sync_dir.joinpath(sync_file_name)),
+                base_settings)
     except Exception as err:
-        logger.exception(f'an error during sync\n\n{err}', exc_info=True, stack_info=True)
+        logger.exception(f'an error during sync\n\n{err}',
+                         exc_info=True,
+                         stack_info=True)
         raise exceptions.SyncMnpError(err) from None
 
     logger.info('finished sync')

@@ -69,11 +69,13 @@ def file_handler(base_settings: utils.BaseSettings):
     try:
         tmp_file = Path(shutil.copy(base_settings.lat_conf.source_file_path,
                                     base_settings.tmp_dir))
-        utils.archive_file(file_in=base_settings.lat_conf.source_file_path,
-                           archive_dir=base_settings.lat_conf.archive_dir)
+        utils.archive_file(
+            file_in=base_settings.lat_conf.source_file_path,
+            archive_dir=base_settings.lat_conf.archive_dir)
         if base_settings.lat_conf.handled_file_path.exists():
-            utils.archive_file(file_in=base_settings.lat_conf.handled_file_path,
-                               archive_dir=base_settings.lat_conf.archive_dir)
+            utils.archive_file(
+                file_in=base_settings.lat_conf.handled_file_path,
+                archive_dir=base_settings.lat_conf.archive_dir)
 
         try:
             logger.info('start parse file')
@@ -89,7 +91,8 @@ def file_handler(base_settings: utils.BaseSettings):
             delete_temp_files(base_settings, tmp_file)
             return
 
-        shutil.move(base_settings.lat_conf.lock_file, base_settings.lat_conf.handled_file_path)
+        shutil.move(base_settings.lat_conf.lock_file,
+                    base_settings.lat_conf.handled_file_path)
 
         delete_temp_files(base_settings, tmp_file)
         logger.info('finished processing')
