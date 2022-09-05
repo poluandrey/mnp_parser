@@ -12,8 +12,9 @@ ARCHIVE_DIR = FILE_STORAGE.joinpath('archive')
 SYNC_DIR = FILE_STORAGE.joinpath('sync')
 HLR_PROXY_FILE = 'hlr-proxy.csv'
 HLR_RESALE_FILE = 'hlr-resale.csv'
-SUPPORTED_COUNTRIES = list(config['SUPPORTED_COUNTRIES'].replace(' ', '').split(sep=','))
+SOURCE_RESALE_DIR = pathlib.Path(config['SOURCE_RESALE_SYNC_DIR'])
 REMOTE_SYNC_DIR = pathlib.Path(config['REMOTE_SYNC_DIR'])
+SUPPORTED_COUNTRIES = list(config['SUPPORTED_COUNTRIES'].replace(' ', '').split(sep=','))
 
 # email settings for local notification
 EMAIL_SERVER = config['EMAIL_SERVER']

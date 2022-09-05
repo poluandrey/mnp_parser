@@ -1,50 +1,29 @@
 import argparse
-import pprint
 import traceback
-from pathlib import Path
-
-from typing import NamedTuple, List
 
 import belarus_mnp
 import exceptions
 import kazakhstan_mnp
 import latvia_mnp
-import settings
 import utils
+from hlr_sync import sync
 from utils.loger_util import create_logger
-
-
-def pretty(d: NamedTuple, indent=0):
-    for key, value in d._asdict().items():
-        if isinstance(value, utils.LatSettings) or isinstance(value, utils.KztSettings) or isinstance(value, utils.BelSettings):
-            print('-' * 60)
-            print(f'{key}')
-            pretty(value, indent+4)
-        else:
-            print(' ' * indent + f'{key}: ' + str(value))
+from utils.utils import show_config
 
 
 def create_parser():
     parser = argparse.ArgumentParser(
         description='script for parse MNP files and load DB to server')
     parser.add_argument(
+        '-c',
         '--country',
-        nargs='?',
         required=False,
         help='country for processing',
     )
     parser.add_argument(
         '-config',
-        help='return config for provided country or'
-             ' base config if "base" specified',
+        help='return current configuration',
         action='store_true',
-    )
-    parser.add_argument(
-        '--supported-countries',
-        nargs='?',
-        const=True,
-        help='return list of supporting country',
-        metavar='supported_countries'
     )
     parser.add_argument(
         '--sync',
@@ -99,38 +78,12 @@ def latvia_handler(base_settings):
                          subject='Latvia parser error')
 
 
-def sync(handled_files: List[Path],
-         sync_type: str,
-         base_settings: utils.BaseSettings):
-    logger = create_logger('sync', base_settings.log_dir)
-
-    logger.info(f'start {sync_type} sync')
-    try:
-        if sync_type == 'hlr-proxy':
-            sync_dir_name = base_settings.hlr_proxy_file
-        else:
-            sync_dir_name = base_settings.hlr_resale_file
-
-        sync_file = base_settings.sync_dir.joinpath(sync_dir_name)
-
-        with open(sync_file, 'w') as sync_f:
-            for file in handled_files:
-                with open(file, 'r') as handled_f:
-                    for line in handled_f:
-                        sync_f.write(line)
-
-        utils.copy_to_smssw(str(sync_file), str(base_settings.remote_sync_dir.joinpath(sync_dir_name)), base_settings)
-    except Exception as err:
-        logger.exception(f'an error during sync\n\n{err}', exc_info=True, stack_info=True)
-        raise exceptions.SyncMnpError(err) from None
-
-    logger.info('finished sync')
-
-
 def main():
+    logger = create_logger(__name__)
     base_settings = utils.get_base_settings()
     parser = create_parser()
     args = parser.parse_args()
+    logger.info(f'script started with following arguments: {args}')
 
     if args.country == 'latvia':
         latvia_handler(base_settings)
@@ -140,10 +93,7 @@ def main():
         kazakhstan_handler(base_settings)
 
     if args.config:
-        pretty(base_settings, 0)
-
-    if args.supported_countries:
-        pprint.pprint(settings.SUPPORTED_COUNTRIES)
+        show_config(base_settings, 0)
 
     if args.sync:
         try:
@@ -152,8 +102,9 @@ def main():
                 base_settings.bel_conf.handled_file_path,
                 base_settings.kz_conf.handled_file_path,
             ]
-
+            logger.info('start sync')
             sync(handled_files, args.sync, base_settings)
+            logger.info('finished sync')
         except exceptions.SyncMnpError as err:
             tb = traceback.format_exc()
             utils.send_email(text=f'{err}\n\n{tb}',

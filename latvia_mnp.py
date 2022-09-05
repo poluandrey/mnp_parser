@@ -51,7 +51,7 @@ def parse_file(file_in: Path,
 
 
 def file_handler(base_settings: utils.BaseSettings):
-    logger = create_logger(__name__, base_settings.log_dir)
+    logger = create_logger(__name__)
     logger.info('start processing')
     if not base_settings.lat_conf.source_file_path.exists():
         msg = f'{base_settings.lat_conf.source_file_path} not exists'

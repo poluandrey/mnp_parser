@@ -72,6 +72,7 @@ class BaseSettings(NamedTuple):
     log_dir: Path
     sync_dir: Path
     remote_sync_dir: Path
+    source_sync_dir: Path
     hlr_proxy_file: str
     hlr_resale_file: str
     email_server: str
@@ -160,6 +161,7 @@ def get_base_settings() -> BaseSettings:
             settings.LOG_DIR,
             settings.SYNC_DIR,
             settings.REMOTE_SYNC_DIR,
+            settings.SOURCE_RESALE_DIR,
             settings.HLR_PROXY_FILE,
             settings.HLR_RESALE_FILE,
             settings.EMAIL_SERVER,
@@ -228,3 +230,13 @@ def copy_to_smssw(file_in: str,
 def copy_to_ftp_folder():
     """copy to FTP folder and change user/group ownership"""
     pass
+
+
+def show_config(d: NamedTuple, indent=0):
+    for key, value in d._asdict().items():
+        if isinstance(value, LatSettings) or isinstance(value, KztSettings) or isinstance(value, BelSettings):
+            print('-' * 60)
+            print(f'{key}')
+            show_config(value, indent + 4)
+        else:
+            print(' ' * indent + f'{key}: ' + str(value))
