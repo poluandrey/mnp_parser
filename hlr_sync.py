@@ -60,56 +60,58 @@ def sync(handled_files: List[Path],
                     logger.info('not all files for full import arrived')
                     return
 
-            for file in files:
-                f = os.path.join(base_settings.source_sync_dir, file)
-                with ZipFile(f) as zip_file:
-                    zip_file.extractall(base_settings.source_sync_dir)
-                os.remove(f)
-            files = os.listdir(base_settings.source_sync_dir)
-            tmp_file = base_settings.sync_dir.joinpath(f'tmp_{sync_file_name}')
-            with open(tmp_file, 'wb') as out_f:
-                # concatenate source files
-                for source_file_name in files:
-                    source_file_path = base_settings.source_sync_dir.joinpath(
-                        str(source_file_name))
-                    with open(source_file_path, 'rb') as in_f:
-                        shutil.copyfileobj(in_f, out_f)
-                    os.remove(source_file_path)
-                # concatenate parsed files
-                parsed_files = [base_settings.lat_conf.handled_file_path,
-                                base_settings.kz_conf.handled_file_path,
-                                base_settings.bel_conf.handled_file_path]
-                for parsed_file in parsed_files:
-                    if not parsed_file.exists():
-                        continue
-                    with open(parsed_file, 'rb') as in_f:
-                        shutil.copyfileobj(in_f, out_f)
+                for file in files:
+                    f = os.path.join(base_settings.source_sync_dir, file)
+                    with ZipFile(f) as zip_file:
+                        zip_file.extractall(base_settings.source_sync_dir)
+                    os.remove(f)
+                files = os.listdir(base_settings.source_sync_dir)
+                tmp_file = base_settings.sync_dir.joinpath(f'tmp_{sync_file_name}')
+                with open(tmp_file, 'wb') as out_f:
+                    # concatenate source files
+                    for source_file_name in files:
+                        source_file_path = base_settings.source_sync_dir.joinpath(
+                            str(source_file_name))
+                        with open(source_file_path, 'rb') as in_f:
+                            shutil.copyfileobj(in_f, out_f)
+                        os.remove(source_file_path)
+                    # concatenate parsed files
+                    parsed_files = [base_settings.lat_conf.handled_file_path,
+                                    base_settings.kz_conf.handled_file_path,
+                                    base_settings.bel_conf.handled_file_path]
+                    for parsed_file in parsed_files:
+                        if not parsed_file.exists():
+                            continue
+                        with open(parsed_file, 'rb') as in_f:
+                            shutil.copyfileobj(in_f, out_f)
 
-            source_sync_file = base_settings.sync_dir.joinpath(sync_file_name)
-            with open(tmp_file, 'r') as source:
-                reader = csv.reader(source, delimiter=';')
-                with open(source_sync_file, "w") as destination:
-                    writer = csv.writer(destination, delimiter=';')
-                    for r in reader:
-                        msisdn = r[0]
-                        mccmnc = r[1]
-                        port_time = r[2]
-                        try:
-                            owner_id = r[4]
-                        except IndexError:
-                            owner_id = None
-                        if owner_id:
-                            writer.writerow((msisdn,
-                                             mccmnc,
-                                             port_time,
-                                             owner_id))
-                        else:
-                            writer.writerow((msisdn, mccmnc, port_time))
-            os.remove(tmp_file)
-            utils.copy_to_smssw(
-                str(source_sync_file),
-                str(base_settings.remote_sync_dir.joinpath(sync_file_name)),
-                base_settings)
+                source_sync_file = base_settings.sync_dir.joinpath(sync_file_name)
+                with open(tmp_file, 'r') as source:
+                    reader = csv.reader(source, delimiter=';')
+                    with open(source_sync_file, "w") as destination:
+                        writer = csv.writer(destination, delimiter=';')
+                        for r in reader:
+                            msisdn = r[0]
+                            mccmnc = r[1]
+                            port_time = r[2]
+                            try:
+                                owner_id = r[4]
+                            except IndexError:
+                                owner_id = None
+                            if owner_id:
+                                writer.writerow((msisdn,
+                                                 mccmnc,
+                                                 port_time,
+                                                 owner_id))
+                            else:
+                                writer.writerow((msisdn, mccmnc, port_time))
+                os.remove(tmp_file)
+                utils.copy_to_smssw(
+                    str(source_sync_file),
+                    str(base_settings.remote_sync_dir.joinpath(sync_file_name)),
+                    base_settings)
+            else:
+                logger.info(f'load mode is {load_mode}')
     except Exception as err:
         logger.exception(f'an error during sync\n\n{err}',
                          exc_info=True,
